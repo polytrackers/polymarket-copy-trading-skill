@@ -59,7 +59,7 @@ Use REST/OpenAPI when:
 Useful URLs:
 
 - MCP endpoint: `https://polytrackers.com/api/mcp`
-- MCP stdio bridge package: `@polytrackers/mcp-stdio`
+- MCP stdio bridge (npm): `npx -y @polytrackers/mcp-stdio`
 - API docs: `https://polytrackers.com/docs/api`
 - OpenAPI JSON: `https://polytrackers.com/api/openapi.json`
 - Agent skill: `https://polytrackers.com/skill.md`
@@ -72,7 +72,8 @@ Create an Agent API Key from PolyTrackers Profile. The same `ptk_...` bearer key
 Authorization: Bearer ptk_...
 ```
 
-For MCP stdio clients, set:
+For MCP stdio clients that cannot use the hosted Streamable HTTP endpoint, run
+the bridge with `npx -y @polytrackers/mcp-stdio` and set:
 
 ```sh
 POLYTRACKERS_API_KEY=ptk_...                          # required
@@ -82,8 +83,6 @@ POLYTRACKERS_MCP_TIMEOUT_MS=60000                     # optional default
 ```
 
 The bridge validates `POLYTRACKERS_MCP_URL` at startup so a tampered environment can't redirect your key: it must be `https://` (loopback `http://` is allowed for local dev), and when `POLYTRACKERS_MCP_ALLOWED_HOSTS` is set the URL host must match. An invalid or non-allowlisted URL exits with code `78`.
-
-For stdio-only MCP hosts, run the bridge with `npx -y @polytrackers/mcp-stdio`.
 
 Scopes:
 
@@ -165,18 +164,17 @@ Important tool groups:
 
 Use clients that can connect directly to `https://polytrackers.com/api/mcp` with
 `Authorization: Bearer ptk_...` when available. For stdio-only MCP hosts, run the
-published bridge package with `npx -y @polytrackers/mcp-stdio`.
+bridge with `npx -y @polytrackers/mcp-stdio`.
 
-### Claude Desktop
+### Hosted HTTP
 
 ```jsonc
 {
   "mcpServers": {
     "polytrackers": {
-      "command": "npx",
-      "args": ["-y", "@polytrackers/mcp-stdio"],
-      "env": {
-        "POLYTRACKERS_API_KEY": "ptk_...",
+      "url": "https://polytrackers.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ptk_...",
       },
     },
   },
@@ -191,11 +189,9 @@ Add the same server block to Cursor's MCP configuration:
 {
   "mcpServers": {
     "polytrackers": {
-      "command": "npx",
-      "args": ["-y", "@polytrackers/mcp-stdio"],
-      "env": {
-        "POLYTRACKERS_API_KEY": "ptk_...",
-        "POLYTRACKERS_MCP_URL": "https://polytrackers.com/api/mcp",
+      "url": "https://polytrackers.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ptk_...",
       },
     },
   },
@@ -210,19 +206,20 @@ Configure the stdio bridge as an MCP server for Codex, with the key supplied fro
 {
   "mcpServers": {
     "polytrackers": {
-      "command": "npx",
-      "args": ["-y", "@polytrackers/mcp-stdio"],
-      "env": {
-        "POLYTRACKERS_API_KEY": "${POLYTRACKERS_API_KEY}",
+      "url": "https://polytrackers.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${POLYTRACKERS_API_KEY}",
       },
     },
   },
 }
 ```
 
-### OpenClaw
+### Stdio-only hosts
 
-Register an MCP server named `polytrackers` that runs the stdio bridge and reads `POLYTRACKERS_API_KEY` from the environment or secret manager:
+Register an MCP server named `polytrackers` that runs the bridge with
+`npx -y @polytrackers/mcp-stdio` and reads `POLYTRACKERS_API_KEY` from the
+environment or secret manager:
 
 ```jsonc
 {
@@ -232,6 +229,7 @@ Register an MCP server named `polytrackers` that runs the stdio bridge and reads
       "args": ["-y", "@polytrackers/mcp-stdio"],
       "env": {
         "POLYTRACKERS_API_KEY": "${POLYTRACKERS_API_KEY}",
+        "POLYTRACKERS_MCP_ALLOWED_HOSTS": "polytrackers.com",
         "POLYTRACKERS_MCP_TIMEOUT_MS": "60000",
       },
     },
@@ -253,7 +251,7 @@ Register an MCP server named `polytrackers` that runs the stdio bridge and reads
 - `CDP_DELEGATION_EXPIRED`: the user's CDP wallet signing authorization expired. Tell the user to open PolyTrackers Settings → Wallet, reconnect the wallet session if needed, and re-authorize manual signing before retrying the real order.
 - `pt_mock_trade_place` sizing errors: pass notional `cost` in USD/USDC, or `amount` as its alias. Use `pricePerShare`, or `price_per_share` as its alias, for entry price. Do not retry with `size` or `shares`; the tool derives shares from `cost / pricePerShare`.
 - Empty or truncated results: lower `limit`, narrow filters, or use batch/detail tools for follow-up.
-- Stdio bridge issues: verify the local bridge script from a trusted PolyTrackers checkout can run, the key is in env, and logs are read from stderr (stdout is reserved for JSON-RPC frames).
+- Stdio bridge issues: verify `npx -y @polytrackers/mcp-stdio` can run, the key is in env, and logs are read from stderr (stdout is reserved for JSON-RPC frames).
 
 ## Maintainer sync guardrail
 
