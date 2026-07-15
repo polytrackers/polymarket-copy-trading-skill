@@ -63,6 +63,7 @@ Useful URLs:
 - API docs: `https://polytrackers.com/docs/api`
 - OpenAPI JSON: `https://polytrackers.com/api/openapi.json`
 - Agent skill: `https://polytrackers.com/skill.md`
+- Anonymous card signals: `GET /api/market-signals?conditionIds=<comma-separated IDs>` returns only trailing-24-hour whale/anomaly booleans for up to 100 markets. Treat them as cached discovery hints, not live trading evidence.
 
 ## Official distribution channels
 
