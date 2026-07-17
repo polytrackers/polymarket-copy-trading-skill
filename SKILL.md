@@ -253,7 +253,7 @@ environment or secret manager:
 ## Troubleshooting
 
 - `AUTH_MISSING` or 401: confirm the `Authorization` header or `POLYTRACKERS_API_KEY` is present and has no extra quotes/spaces.
-- `AUTH_INVALID`: the key is invalid, expired, or revoked — regenerate it and update every local MCP client config. (Direct REST/OpenAPI calls report this as `api_key_invalid` / `api_key_expired`.)
+- `AUTH_INVALID`: the key is invalid, expired, or revoked — regenerate it and update every local MCP client config. (Direct REST/OpenAPI calls surface this as a generic `401` — `{ "error": "Unauthorized" }`, or `{ "error": "Invalid API key" }` on the public signals endpoints — with no machine-readable code.)
 - `TIER_UPGRADE_REQUIRED`: the account tier does not meet the tool requirement. The error includes `upgrade_url` and `required_tier`.
 - `AUTH_SCOPE_MISSING`: the key lacks the scope the tool needs. The error includes `required_scope`; regenerate the key with that scope if the tier allows it.
 - `RATE_LIMITED` / 429: obey `retry_after_seconds`; workflow `_failures[]` can also include conservative retry hints for rate-limited sub-calls that are separate from the caller's main MCP tier counter. If a concurrent Streamable HTTP burst receives raw non-JSON `Too many requests`, throttle to one call at a time, add at least 250ms between starts, and back off from 2s up to 60s with jitter.
