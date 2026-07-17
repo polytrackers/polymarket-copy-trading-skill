@@ -110,7 +110,7 @@ Key limits and expiry are enforced server-side. Each account keeps one active Ag
 
 ## Free vs Pro vs Elite availability
 
-- Free: read-only keys only — every generated key gets exactly `signals:read`; requested write/automation scopes are stripped. Most read-only tools are available, subject to free-tier data shaping (shorter history, delayed/top-N anomalies) and a low rate limit (10 requests/min per tool, plus 200 requests/day shared across all tools). `pt_anomalies_performance_get`, `pt_mock_analytics_export`, `pt_trade_preflight`, and all write/trade tools require Pro or Elite.
+- Free: read-only keys only — every generated key gets exactly `signals:read`; requested write/automation scopes are stripped. Most read-only tools are available, subject to free-tier data shaping (7-day base anomaly history, up to 28 days with activated referral rewards; delayed/top-N anomalies) and a low rate limit (10 requests/min per tool, plus 200 requests/day shared across all tools). `pt_anomalies_performance_get`, `pt_mock_analytics_export`, `pt_trade_preflight`, and all write/trade tools require Pro or Elite.
 - Pro with `signals:read`: read-only market/anomaly/copy intelligence and mock analytics. Pro may also request `trade:execute` for real trade execution and `agent:scan` for scan automation.
 - Some non-trade write tools are Pro-tier but require `agent:full`; generated Pro keys should treat them as unavailable unless the capabilities payload shows that scope is present.
 - Elite: `agent:full` access can use the broad write surface and remains a superset for real trade execution.
