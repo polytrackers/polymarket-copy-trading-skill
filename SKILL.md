@@ -128,6 +128,25 @@ Important tool groups:
 - Account/API: `pt_account_get`, `pt_account_stats_get`, `pt_account_risk_profile_get`, `pt_api_keys_list`, `pt_api_key_revoke`, `pt_mcp_capabilities_get`.
 - Real trading: `pt_trade_preflight` first, then `pt_trade_execute` with `trade:execute` or `agent:full` only after explicit user approval. AI-agent one-off real trades and real copy-trading use separate max-per-trade / daily-limit controls. `pt_trade_preflight` and `pt_trade_execute` both evaluate the AI-agent one-off controls for direct agent trades; `AUTOMATION_AMOUNT_LIMIT_EXCEEDED` includes the attempted amount and configured `max_per_trade` in `details`. `pt_trade_order_cancel` remains Elite-only.
 
+## Optional SSE notifications
+
+Subscribe to the optional event stream with an active Agent API Key:
+
+```sh
+curl -N \
+  -H "Authorization: Bearer ptk_..." \
+  "https://polytrackers.com/api/mcp/events?topics=anomalies,whale_signals,copy_signals,scan_progress"
+```
+
+The `whale_signals` and `copy_signals` topics are Elite-only. For Free and Pro
+keys, those requested topics are silently dropped while the `200` stream
+remains live for permitted topics and key-scoped catalog notifications.
+
+Each connection lasts at most 800 seconds (~13 minutes), so reconnect after it
+closes. There is no `Last-Event-ID` resumption: each reconnect starts at the
+current Redis position (`$`), so events published while disconnected are
+permanently missed.
+
 ## Common workflows
 
 ### Market intel
