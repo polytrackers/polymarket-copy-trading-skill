@@ -3,8 +3,10 @@
 Copy trading and paper (mock) trading for Polymarket, built for AI agents. This
 repo packages the **PolyTrackers Agent Skill** plus MCP server config so Claude,
 Cursor, Codex, OpenClaw, and other MCP hosts can pull Polymarket market
-intelligence, whale tracking, anomaly detection, copy-trading review, and $10K
-paper-trading (mock wallet) experiments — with a free tier.
+intelligence, whale tracking, anomaly detection, and copy-trading review, then
+use tier-gated paper-trading and real-trade workflows. Free MCP access is
+read-only; the separate PolyTrackers web app includes a free $10K virtual
+wallet.
 
 - **Website:** https://polytrackers.com
 - **Agent skill (canonical):** https://polytrackers.com/skill.md
@@ -27,19 +29,22 @@ https://polytrackers.com/skill.md.
 
 ## Free tier
 
-You can start for free — no card required:
+You can start for free — no card required — through two distinct surfaces:
 
-- **$10K virtual (paper-trading) mock wallet.** Every new mock wallet starts with
-  $10,000 in virtual funds to test strategies against live Polymarket odds. See
+- **Free MCP access.** Free accounts can generate a scoped Agent API Key
+  (`ptk_...`). Free MCP access is read-only and uses exactly the `signals:read`
+  scope. It covers market, anomaly, account, and recommendation reads plus mock
+  wallet inspection, live mock prices, and P&L summaries. It does not include
+  MCP writes or mock analytics export. Free-tier data shaping applies, with 10
+  requests/min per tool plus 200 requests/day shared across all tools.
+- **Free web-app mock trading.** Separately from MCP, a free account can use one
+  mock wallet in the PolyTrackers web app. It starts with $10,000 in virtual
+  funds for testing strategies against live Polymarket odds. See
   https://polytrackers.com/polymarket-paper-trading.
-- **Agent API Keys.** Free accounts can generate a scoped Agent API Key
-  (`ptk_...`). Free keys hold exactly the `signals:read` scope — read-only market,
-  anomaly, account, recommendations, and mock-analytics workflows — subject to
-  free-tier data shaping and a rate limit of 10 requests/min per tool plus 200
-  requests/day shared across all tools.
 
-Pro and Elite tiers unlock write/automation scopes, larger history windows, and
-real-trade execution. The authoritative source for what your key can do is the
+Pro adds optional narrow real-trade and scan scopes, mock analytics export, and
+larger history windows. Elite adds `agent:full` for broad writes, including
+committed mock trades. The authoritative source for what your key can do is the
 live MCP capabilities payload (`pt_mcp_capabilities_get`); pricing and upgrade
 details live in the PolyTrackers account/subscription UI.
 
@@ -52,8 +57,12 @@ details live in the PolyTrackers account/subscription UI.
   review.
 - **Anomaly detection** — list/inspect anomaly signals with tier-gated history
   and (Pro+) scan triggering.
-- **Paper / mock trading** — create mock wallets, place simulated trades (sized by
-  notional `cost`), resolve/reconcile, and export mock analytics.
+- **Paper / mock trading (tier-gated over MCP)** — Free MCP access can inspect
+  mock wallets, prices, and P&L summaries. Committed mock writes require
+  `agent:full`, which normal Agent API Key generation provides only on Elite;
+  that includes creating wallets, placing simulated trades (sized by notional
+  `cost`), and resolving/reconciling positions. Mock analytics export requires
+  Pro or Elite with `signals:read`.
 - **Real trade execution (Pro/Elite, gated)** — `pt_trade_preflight` then
   `pt_trade_execute` only after explicit user approval, with idempotency and
   preflight-token safeguards.
