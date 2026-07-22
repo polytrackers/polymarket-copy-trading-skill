@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-d7e139a09482658f8e4de572590fa5fef1cfd702be54fda9bcf0aa404086d671
+MCP catalog fingerprint: sha256-f833a10013aa69685259ca1b9366aa5a8266ef3bc7219569f538c3ffa5cefd6b
 
 ## Safety defaults
 
@@ -124,7 +124,7 @@ Important tool groups:
 - Anomalies: `pt_anomalies_list`, `pt_anomalies_get`, `pt_anomaly_context_get`, `pt_anomalies_batch_get`, `pt_anomalies_performance_get`, `pt_scan_trigger`.
 - Backtesting: `pt_backtest_run` (replay anomaly/whale signals against historical resolved markets; Free runs the fixed demo config only).
 - Copy trading: `pt_copy_trading_digest_get`, `pt_recommendations_get`, `pt_trader_profile_get`, `pt_trader_profile_batch_get`, `pt_trader_lookup`, `pt_leaderboard_get`, `pt_roster_list`, `pt_roster_get`, and Pro+ `agent:full` mock-roster writes (`pt_roster_add`, `pt_roster_update`, `pt_roster_remove`).
-- Mock experiments: `pt_mock_experiment_run`, `pt_mock_wallet_create`, `pt_mock_trade_place`, `pt_mock_resolve_run`, `pt_mock_reconcile_run`, analytics/export tools. `pt_mock_resolve_run` with `dry_run:true` and a caller-owned `tradeId` returns a non-writing close preview with server-fetched `current_close_price`, `estimated_realized_pnl`, and `estimated_wallet_balance_delta` when priceable; if not priceable, it returns `priceable:false` and `non_priceable_reason` without fabricated P&L.
+- Mock experiments: `pt_mock_experiment_run`, `pt_mock_wallet_create`, `pt_mock_wallet_copy_sizing_update`, `pt_mock_trade_place`, `pt_mock_resolve_run`, `pt_mock_reconcile_run`, analytics/export tools. `pt_mock_wallet_copy_sizing_update` accepts 1–100, raises paper-copy sizing before existing risk ceilings, supports `dry_run:true`, and never changes real-money copy sizing from 1x. `pt_mock_resolve_run` with `dry_run:true` and a caller-owned `tradeId` returns a non-writing close preview with server-fetched `current_close_price`, `estimated_realized_pnl`, and `estimated_wallet_balance_delta` when priceable; if not priceable, it returns `priceable:false` and `non_priceable_reason` without fabricated P&L.
 - Account/API: `pt_account_get`, `pt_account_stats_get`, `pt_account_risk_profile_get`, `pt_api_keys_list`, `pt_api_key_revoke`, `pt_mcp_capabilities_get`.
 - Real trading: `pt_trade_preflight` first, then `pt_trade_execute` with `trade:execute` or `agent:full` only after explicit user approval. AI-agent one-off real trades and real copy-trading use separate max-per-trade / daily-limit controls. `pt_trade_preflight` and `pt_trade_execute` both evaluate the AI-agent one-off controls for direct agent trades; `AUTOMATION_AMOUNT_LIMIT_EXCEEDED` includes the attempted amount and configured `max_per_trade` in `details`. `pt_trade_order_cancel` remains Elite-only.
 
@@ -176,8 +176,9 @@ permanently missed.
 8. When checking `pt_whale_status_get`, treat `wallet.openPositions` as the legacy aggregate risk counter. Use `wallet.mockOpenPositions` / `walletStats.openPositions` for mock-only exposure, `wallet.realOpenPositions` for the inferred real-trade portion, and `openPositionBreakdown` when explaining discrepancies.
 9. When passing `wallet_id` to `pt_copy_trading_digest_get`, treat `recent_mock_copy_trades` as wallet-scoped. If `top_copied_traders` returns `unavailable: true`, do not use global top-copied labels as evidence for that wallet.
 10. Use `pt_roster_list` / `pt_roster_get` before roster mutations. When profiling a whale for a specific mock wallet, pass that wallet's `wallet_id`/`walletId` to `pt_trader_profile_get` or `pt_roster_get`; address-only lookups keep active-first / most-recent-inactive fallback behavior and may return `roster_status_ambiguous` with `matching_assignments` when the same whale is assigned to multiple caller-owned wallets. Roster write addresses must be `0x` plus 40 hexadecimal characters; malformed addresses are rejected even for dry-runs. Use `pt_roster_add`, `pt_roster_update`, or `pt_roster_remove` only after user approval, and dry-run first when possible. `pt_roster_update` accepts optional boolean `copyEnabled`: `copyEnabled:false` keeps the whale on the watching feed but stops mirroring its trades (watch-only), `copyEnabled:true` resumes copying, and it is independent of `active`. Watch-only assignments still count toward tier caps. `copyEnabled` cannot be combined with reactivation (`active:true` on a paused whale) or a wallet move (`walletId`); such requests fail with 400 — toggle copying in a separate call. These tools manage mock copy-trading roster assignments; they do not link real wallets or grant custody.
-11. Explain why a wallet/trader appears relevant, including risk profile, lifecycle warnings, backtest coverage, post-cost edge, and known gaps.
-12. Ask for explicit confirmation before any trade-related next step.
+11. Use `pt_mock_wallet_copy_sizing_update` only for an explicitly selected paper wallet. Dry-run the proposed multiplier first, show the resulting base-size example and the lower risk ceiling that may bind, and record when a changed multiplier makes before/after paper P&L non-comparable. Never describe this control as affecting real-money copies.
+12. Explain why a wallet/trader appears relevant, including risk profile, lifecycle warnings, backtest coverage, post-cost edge, and known gaps.
+13. Ask for explicit confirmation before any trade-related next step.
 
 ### Mock experiment
 

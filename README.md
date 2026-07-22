@@ -61,8 +61,10 @@ details live in the PolyTrackers account/subscription UI.
   mock wallets, prices, and P&L summaries. Committed mock writes require
   `agent:full`, which normal Agent API Key generation provides only on Elite;
   that includes creating wallets, placing simulated trades (sized by notional
-  `cost`), and resolving/reconciling positions. Mock analytics export requires
-  Pro or Elite with `signals:read`.
+  `cost`), setting a paper-only 1–100x whale-copy sizing multiplier, and
+  resolving/reconciling positions. Existing risk ceilings still apply; real
+  copies stay 1x. Mock analytics export requires Pro or Elite with
+  `signals:read`.
 - **Real trade execution (Pro/Elite, gated)** — `pt_trade_preflight` then
   `pt_trade_execute` only after explicit user approval, with idempotency and
   preflight-token safeguards.
