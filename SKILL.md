@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-f833a10013aa69685259ca1b9366aa5a8266ef3bc7219569f538c3ffa5cefd6b
+MCP catalog fingerprint: sha256-c30e2b7e719770b7cf2c550c3ff44ceec4e07793b8cc331bf5b0f06d7d62e07d
 
 ## Safety defaults
 
@@ -110,7 +110,7 @@ Key limits and expiry are enforced server-side. Each account keeps one active Ag
 
 ## Free vs Pro vs Elite availability
 
-- Free: read-only keys only — every generated key gets exactly `signals:read`; requested write/automation scopes are stripped. Most read-only tools are available, subject to free-tier data shaping (7-day base anomaly history, up to 28 days with activated referral rewards; delayed/top-N anomalies) and a low rate limit (10 requests/min per tool, plus 200 requests/day shared across all tools). `pt_anomalies_performance_get`, `pt_mock_analytics_export`, `pt_trade_preflight`, and all write/trade tools require Pro or Elite.
+- Free: read-only keys only — every generated key gets exactly `signals:read`; requested write/automation scopes are stripped. Most read-only tools are available, including caller-owned full-depth real-trade receipts through `pt_trade_history_get`, subject to free-tier data shaping on other surfaces (7-day base anomaly history, up to 28 days with activated referral rewards; delayed/top-N anomalies) and a low rate limit (10 requests/min per tool, plus 200 requests/day shared across all tools). `pt_anomalies_performance_get`, `pt_mock_analytics_export`, `pt_trade_preflight`, and all write or trade-execution tools require Pro or Elite.
 - Pro with `signals:read`: read-only market/anomaly/copy intelligence and mock analytics. Pro may also request `trade:execute` for real trade execution and `agent:scan` for scan automation.
 - Some non-trade write tools are Pro-tier but require `agent:full`; generated Pro keys should treat them as unavailable unless the capabilities payload shows that scope is present.
 - Elite: `agent:full` access can use the broad write surface and remains a superset for real trade execution.
@@ -126,7 +126,7 @@ Important tool groups:
 - Copy trading: `pt_copy_trading_digest_get`, `pt_recommendations_get`, `pt_trader_profile_get`, `pt_trader_profile_batch_get`, `pt_trader_lookup`, `pt_leaderboard_get`, `pt_roster_list`, `pt_roster_get`, and Pro+ `agent:full` mock-roster writes (`pt_roster_add`, `pt_roster_update`, `pt_roster_remove`).
 - Mock experiments: `pt_mock_experiment_run`, `pt_mock_wallet_create`, `pt_mock_wallet_copy_sizing_update`, `pt_mock_trade_place`, `pt_mock_resolve_run`, `pt_mock_reconcile_run`, analytics/export tools. `pt_mock_wallet_copy_sizing_update` accepts 1–100, raises paper-copy sizing before existing risk ceilings, supports `dry_run:true`, and never changes real-money copy sizing from 1x. `pt_mock_resolve_run` with `dry_run:true` and a caller-owned `tradeId` returns a non-writing close preview with server-fetched `current_close_price`, `estimated_realized_pnl`, and `estimated_wallet_balance_delta` when priceable; if not priceable, it returns `priceable:false` and `non_priceable_reason` without fabricated P&L.
 - Account/API: `pt_account_get`, `pt_account_stats_get`, `pt_account_risk_profile_get`, `pt_api_keys_list`, `pt_api_key_revoke`, `pt_mcp_capabilities_get`.
-- Real trading: `pt_trade_preflight` first, then `pt_trade_execute` with `trade:execute` or `agent:full` only after explicit user approval. AI-agent one-off real trades and real copy-trading use separate max-per-trade / daily-limit controls. `pt_trade_preflight` and `pt_trade_execute` both evaluate the AI-agent one-off controls for direct agent trades; `AUTOMATION_AMOUNT_LIMIT_EXCEEDED` includes the attempted amount and configured `max_per_trade` in `details`. `pt_trade_order_cancel` remains Elite-only.
+- Real trading: `pt_trade_history_get` is read-only and available to every tier with `signals:read`. For execution, call `pt_trade_preflight` first, then `pt_trade_execute` with `trade:execute` or `agent:full` only after explicit user approval. AI-agent one-off real trades and real copy-trading use separate max-per-trade / daily-limit controls. `pt_trade_preflight` and `pt_trade_execute` both evaluate the AI-agent one-off controls for direct agent trades; `AUTOMATION_AMOUNT_LIMIT_EXCEEDED` includes the attempted amount and configured `max_per_trade` in `details`. `pt_trade_order_cancel` remains Elite-only.
 
 ## Optional SSE notifications
 

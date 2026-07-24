@@ -34,9 +34,10 @@ You can start for free — no card required — through two distinct surfaces:
 - **Free MCP access.** Free accounts can generate a scoped Agent API Key
   (`ptk_...`). Free MCP access is read-only and uses exactly the `signals:read`
   scope. It covers market, anomaly, account, and recommendation reads plus mock
-  wallet inspection, live mock prices, and P&L summaries. It does not include
-  MCP writes or mock analytics export. Free-tier data shaping applies, with 10
-  requests/min per tool plus 200 requests/day shared across all tools.
+  wallet inspection, live mock prices, P&L summaries, and the caller's own
+  full-depth real-trade receipts. It does not include MCP writes or mock
+  analytics export. Free-tier data shaping applies to other read surfaces,
+  with 10 requests/min per tool plus 200 requests/day shared across all tools.
 - **Free web-app mock trading.** Separately from MCP, a free account can use one
   mock wallet in the PolyTrackers web app. It starts with $10,000 in virtual
   funds for testing strategies against live Polymarket odds. See
