@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-680dc1b56b5872af88da2c2f93fb1441a5edf4da51d13849e7086d4fd82b6a9e
+MCP catalog fingerprint: sha256-af8d27a38c0dcb62fbacf6c583d3f2d637948bd07ec585835ff89b60e5238fe2
 
 ## Safety defaults
 
@@ -160,7 +160,7 @@ permanently missed.
 ### Anomaly scan
 
 1. Use `pt_anomalies_list` or `pt_anomaly_context_get` for existing signals; list rows include `condition_id` for stable market joins.
-2. Filter `pt_anomalies_list` with canonical `anomaly_type`; `type` is only a compatibility alias and conflicting values are invalid. Use `durable_market_only`, `future_end_only`, and `priceable_only` when looking for actionable inventory. When filtered scans return zero rows, inspect `actionable_inventory.zero_row_diagnosis` before retrying: it distinguishes empty source windows, tier-capped scans, and rows filtered as past-end/non-priceable/non-durable. `pt_anomalies_performance_get` aggregate EV cannot currently segment durable/future-actionable cohorts from same-day sports, exact-score, or post-end cohorts, so cross-check positive headlines with the filtered list before calling anything actionable. Default `pt_anomalies_list` results exclude the suppressed types `USER_CONCENTRATION` and `WHALE_TRADE`; do not read their absence as "no such signals exist". To inspect them, pass the suppressed type explicitly as `anomaly_type`, or fetch rows by id via `pt_anomalies_get` / `pt_anomalies_batch_get`, which are unaffected. Treat these types as de-emphasized because they measured net-negative in production, not as hidden actionable inventory.
+2. Filter `pt_anomalies_list` with canonical `anomaly_type`; `type` is only a compatibility alias and conflicting values are invalid. Matching rows can include `ai_top_pick: { reason, generated_at }` from the latest validated editorial snapshot; its absence means no current annotation, not that the detector row is invalid. Use `durable_market_only`, `future_end_only`, and `priceable_only` when looking for actionable inventory. When filtered scans return zero rows, inspect `actionable_inventory.zero_row_diagnosis` before retrying: it distinguishes empty source windows, tier-capped scans, and rows filtered as past-end/non-priceable/non-durable. `pt_anomalies_performance_get` aggregate EV cannot currently segment durable/future-actionable cohorts from same-day sports, exact-score, or post-end cohorts, so cross-check positive headlines with the filtered list before calling anything actionable. Default `pt_anomalies_list` results exclude the suppressed types `USER_CONCENTRATION` and `WHALE_TRADE`; do not read their absence as "no such signals exist". To inspect them, pass the suppressed type explicitly as `anomaly_type`, or fetch rows by id via `pt_anomalies_get` / `pt_anomalies_batch_get`, which are unaffected. Treat these types as de-emphasized because they measured net-negative in production, not as hidden actionable inventory.
 3. If the user asks to refresh and the key has `agent:scan`, call `pt_scan_trigger`.
 4. Respect 429 responses and `Retry-After`; do not loop scan requests.
 
