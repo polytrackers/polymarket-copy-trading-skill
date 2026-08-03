@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-d1bba85156433f2e9e06c2dce206170cfb6c2f7ad007be2d749c9b4047e5bd57
+MCP catalog fingerprint: sha256-c3b60fba70df16d8d3cf95545ed00b973630c1ac88db163996e9283514acee1f
 
 ## Safety defaults
 
@@ -185,7 +185,7 @@ permanently missed.
 
 1. Prefer `pt_mock_experiment_run` for composed simulation.
 2. For manual flows, create/list a mock wallet, refresh `pt_mock_price_get` when price confidence is stale or missing, then place a mock trade with dry-run first. `pt_mock_trade_place` sizes by notional `cost` in USD/USDC; `amount` is accepted as an alias for `cost`, `price_per_share` is accepted as an alias for `pricePerShare`, `size` and `shares` are not accepted sizing fields, and mock shares are derived as `cost / pricePerShare`. Inspect `warnings`, `price_normalization`, and `exposure_summary`, then resolve/reconcile as requested.
-3. Use `summary_only`, `limit`, `recent_trades`, or export `limit` on mock analytics when only aggregate or recent state is needed. Treat `wallet.unrealized_pnl` from wallet list/get or analytics as a persisted snapshot: inspect `unrealized_pnl_marked_at`, and use `wallet_mark_to_market.preferred_unrealized_pnl` as the current-equity authority. A complete analytics pricing pass refreshes the snapshot after the read returns; partial or unavailable pricing leaves the prior mark untouched.
+3. Use `summary_only`, `limit`, `recent_trades`, or export `limit` on mock analytics when only aggregate or recent state is needed. Summary and compact analytics bound `mark_to_market` diagnostic samples and report exact omission counts; request `projection:"detail"` only when every diagnostic id/basket is required. Treat `wallet.unrealized_pnl` from wallet list/get or analytics as a persisted snapshot: inspect `unrealized_pnl_marked_at`, and use `wallet_mark_to_market.preferred_unrealized_pnl` as the current-equity authority. A complete analytics pricing pass refreshes the snapshot after the read returns; partial or unavailable pricing leaves the prior mark untouched.
 4. Label results as simulation only; do not imply live execution.
 
 ### API credit/subscription questions
