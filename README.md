@@ -49,6 +49,14 @@ committed mock trades. The authoritative source for what your key can do is the
 live MCP capabilities payload (`pt_mcp_capabilities_get`); pricing and upgrade
 details live in the PolyTrackers account/subscription UI.
 
+Mock-wallet caps and initial virtual balances are:
+
+| Tier  | Active mock-wallet cap | Initial virtual balance |
+| ----- | ---------------------- | ----------------------- |
+| Free  | 1                      | $10,000                 |
+| Pro   | 5                      | $50,000                 |
+| Elite | 10                     | $100,000                |
+
 ## What agents can do
 
 - **Market intelligence** — search markets, composed market intel, CLOB and mock

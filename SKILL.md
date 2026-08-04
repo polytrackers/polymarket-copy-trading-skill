@@ -117,6 +117,17 @@ Key limits and expiry are enforced server-side. Each account keeps one active Ag
 - The authoritative source is the MCP capabilities payload. At session start, call `pt_mcp_capabilities_get` and inspect `caller.tier`, `caller.scopes`, and each tool's `requiredTier`/`requiredScope` before planning actions.
 - For Streamable HTTP bursts, also inspect `transport_rate_limits.streamable_http`: keep per-key concurrency at 1, space sequential starts by at least 250ms, and honor `Retry-After` / `retry_after_seconds`. If an edge/platform path returns a raw non-JSON 429 (`Too many requests`) before the MCP app code runs, treat it as `RATE_LIMITED` and apply the documented backoff.
 
+## Mock wallet tiers
+
+Wallet caps and initial virtual balances come from the same tier rules used by
+the wallet APIs and MCP tools:
+
+| Tier  | Active mock-wallet cap | Initial virtual balance |
+| ----- | ---------------------- | ----------------------- |
+| Free  | 1                      | $10,000                 |
+| Pro   | 5                      | $50,000                 |
+| Elite | 10                     | $100,000                |
+
 Important tool groups:
 
 - Market intelligence: `pt_market_intel_get` (requires exactly one of `conditionId` or `query`), `pt_markets_search`, `pt_markets_batch_get`, `pt_clob_price_get`, and `pt_mock_price_get` for Gamma mock-entry prices plus advisory `clob_fillability` bid/ask/spread/fillable-at metadata. Use `pt_markets_search` or `pt_agent_briefing_get` for bare market discovery before calling market intel. Continue `pt_markets_search` direct scans only with bounded `offset=direct_scan.next_offset`; do not invent Gamma keyset cursors or unbounded crawls. `pt_mock_price_get` can surface `lifecycle_contradiction.code="PAST_END_DATE_BUT_MARKET_APPEARS_LIVE"`, which keeps the market conservatively non-priceable by default.
