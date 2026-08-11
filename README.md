@@ -62,8 +62,9 @@ Mock-wallet caps and initial virtual balances are:
 - **Market intelligence** — search markets, composed market intel, CLOB and mock
   entry prices, and lifecycle/contradiction warnings.
 - **Whale tracking & copy-trading review** — whale activity/performance,
-  recommendations, trader profiles, leaderboard, and mock copy-trading roster
-  review.
+  recommendations, trader profiles, leaderboard, mock copy-trading roster
+  review, and `pt_whale_forward_returns_get` for bounded decision-time cohort
+  counterfactuals with one failure-isolated row per requested wallet.
 - **Anomaly detection** — list/inspect anomaly signals with tier-gated history
   and (Pro+) scan triggering.
 - **Paper / mock trading (tier-gated over MCP)** — Free MCP access can inspect
