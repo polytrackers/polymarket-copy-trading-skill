@@ -64,7 +64,10 @@ Mock-wallet caps and initial virtual balances are:
 - **Whale tracking & copy-trading review** — whale activity/performance,
   recommendations, trader profiles, leaderboard, mock copy-trading roster
   review, and `pt_whale_forward_returns_get` for bounded decision-time cohort
-  counterfactuals with one failure-isolated row per requested wallet.
+  counterfactuals with one failure-isolated row per requested wallet. Elite
+  agents can also call `pt_copy_parity_report_get` to compare caller-owned
+  paper and live copy BUYs on the same condition, outcome, and UTC day; the
+  report excludes pre-#1860 bid-side mock quotes by default.
 - **Anomaly detection** — list/inspect anomaly signals with tier-gated history
   and (Pro+) scan triggering.
 - **Paper / mock trading (tier-gated over MCP)** — Free MCP access can inspect
