@@ -60,6 +60,7 @@ Use REST/OpenAPI when:
 Useful URLs:
 
 - MCP endpoint: `https://polytrackers.com/api/mcp`
+- MCP manifest: `https://polytrackers.com/.well-known/mcp` (alias `/.well-known/mcp.json`)
 - MCP stdio bridge (npm): `npx -y @polytrackers/mcp-stdio`
 - API docs: `https://polytrackers.com/docs/api`
 - OpenAPI JSON: `https://polytrackers.com/api/openapi.json`
