@@ -61,6 +61,7 @@ Useful URLs:
 
 - MCP endpoint: `https://polytrackers.com/api/mcp`
 - MCP manifest: `https://polytrackers.com/.well-known/mcp` (alias `/.well-known/mcp.json`)
+- API catalog (RFC 9727): `https://polytrackers.com/.well-known/api-catalog` — a JSON linkset naming the REST and MCP entry points with their description, documentation, and metadata URLs
 - MCP stdio bridge (npm): `npx -y @polytrackers/mcp-stdio`
 - API docs: `https://polytrackers.com/docs/api`
 - Markdown variants of the public pages: send `Accept: text/markdown` (list in `/llms.txt`)
