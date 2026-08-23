@@ -63,6 +63,7 @@ Useful URLs:
 - MCP manifest: `https://polytrackers.com/.well-known/mcp` (alias `/.well-known/mcp.json`)
 - MCP stdio bridge (npm): `npx -y @polytrackers/mcp-stdio`
 - API docs: `https://polytrackers.com/docs/api`
+- Markdown variants of the public pages: send `Accept: text/markdown` (list in `/llms.txt`)
 - OpenAPI JSON: `https://polytrackers.com/api/openapi.json`
 - Agent skill: `https://polytrackers.com/skill.md`
 - Anonymous card signals: `GET /api/market-signals?conditionIds=<comma-separated IDs>` returns only trailing-24-hour whale/anomaly booleans for up to 100 markets. Treat them as cached discovery hints, not live trading evidence.
