@@ -61,7 +61,8 @@ Useful URLs:
 
 - MCP endpoint: `https://polytrackers.com/api/mcp`
 - MCP manifest: `https://polytrackers.com/.well-known/mcp` (alias `/.well-known/mcp.json`)
-- API catalog (RFC 9727): `https://polytrackers.com/.well-known/api-catalog` — a JSON linkset naming the REST and MCP entry points with their description, documentation, and metadata URLs
+- Documentation MCP server (no API key): `https://polytrackers.com/api/mcp/docs` — a separate read-only Streamable HTTP server with three tools (`docs_list`, `docs_search`, `docs_get`) over the published documentation; pre-connection card: `https://polytrackers.com/.well-known/mcp/docs-server-card.json`. Use it to answer questions about PolyTrackers before an Agent API Key exists; live data and every `pt_*` tool stay on the product server above.
+- API catalog (RFC 9727): `https://polytrackers.com/.well-known/api-catalog` — a JSON linkset naming the REST, MCP, and documentation MCP entry points with their description, documentation, and metadata URLs
 - MCP stdio bridge (npm): `npx -y @polytrackers/mcp-stdio`
 - API docs: `https://polytrackers.com/docs/api`
 - Markdown variants of the public pages: send `Accept: text/markdown` (list in `/llms.txt`)
