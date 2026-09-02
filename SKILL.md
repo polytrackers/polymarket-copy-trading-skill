@@ -313,4 +313,4 @@ environment or secret manager:
 
 ## Maintainer sync guardrail
 
-When MCP tool names, tiers, scopes, REST auth semantics, rate limits, API key generation behavior, or trading safety behavior change, update this file in the same PR. Then update the MCP catalog fingerprint above. The unit test `app/api/mcp/catalog-skill-sync.test.ts` fails when the catalog fingerprint no longer matches.
+When MCP tool names, tiers, scopes, REST auth semantics, rate limits, API key generation behavior, or trading safety behavior change, update this file in the same PR. Then update the MCP catalog fingerprint above. The unit test `app/api/mcp/catalog-skill-sync.test.ts` fails when the catalog fingerprint no longer matches. Any edit to this file also changes its published digest: regenerate `SKILL_MD_SHA256` in `app/lib/agent-discovery/agent-skills-index.ts` from `shasum -a 256 public/skill.md`, and keep the body of `distribution/skill-repo/SKILL.md` identical to this file — `app/lib/agent-discovery/agent-skills-index.test.ts` and the sync test fail otherwise.
