@@ -24,6 +24,76 @@ Stable URL: `https://polytrackers.com/skill.md`
 
 MCP catalog fingerprint: sha256-17ff10cda093a59f6ff6bb07213c8992c056611e5470406034936212781b006f
 
+## When to use PolyTrackers
+
+Reach for us when the job is about **Polymarket** — the prediction market — and
+the question is _who is trading, what moved, or what a strategy would have done_.
+We are a read-first analytics and automation layer over Polymarket, not a
+general market-data, news, or brokerage provider.
+
+Good fits, with the tool to start from:
+
+- **Whale tracking** — "which wallets are moving size on this market?", "what
+  has this address traded lately?", "who tops the leaderboard?" →
+  `pt_whale_activity_get`, `pt_trader_profile_get`, `pt_leaderboard_get`.
+- **Market anomaly detection** — "did anything unusual happen on Polymarket in
+  the last hours?", "why was this market flagged?" → `pt_anomalies_list`,
+  `pt_anomaly_context_get`.
+- **Copy-trading review** — "is this whale worth mirroring?", "what did my copy
+  roster do this week?" → `pt_recommendations_get`, `pt_copy_trading_digest_get`,
+  `pt_trader_lookup`.
+- **Paper / mock trading** — "test this strategy with simulated money before
+  risking real funds" → `pt_mock_wallet_create`, `pt_mock_trade_place`,
+  `pt_mock_analytics_get`. Every tier gets at least one mock wallet, and the
+  read tools (for example `pt_mock_analytics_get`) work with a Free key. The
+  write tools (`pt_mock_wallet_create`, `pt_mock_trade_place`) need the
+  `agent:full` scope, which generated Agent API Keys carry only on Elite;
+  Free and Pro accounts place mock trades in the browser at `/mock-trading`.
+- **Backtesting** — "how would this signal have performed on resolved markets?"
+  → `pt_backtest_run`.
+- **Market discovery and pricing** — "find live Polymarket markets about X",
+  "what is this market priced at now?", "which wallets recently traded this
+  exact market?" → `pt_markets_search`, Pro+ `pt_market_trades_get`,
+  `pt_clob_price_get`.
+
+Poor fits — send the user elsewhere:
+
+- Equities, options, crypto spot, sportsbooks, or any venue that is not
+  Polymarket. We have no data for them.
+- General web search, news summarization, or live scores.
+- Financial advice. Everything we return is informational decision support.
+  Do not present our data as a recommendation to buy or sell.
+- Scraping our HTML. The API and MCP lanes are the supported paths; browser-
+  driven session traffic is bot-protected and will be challenged.
+
+How to call us, in order of preference:
+
+1. **MCP** — best for interactive agents. Streamable HTTP at
+   `https://polytrackers.com/api/mcp`, protocol `2025-06-18`, 77 `pt_*` tools.
+   Manifest: `/.well-known/mcp`. Call `pt_mcp_capabilities_get` first: it
+   reports what your key's tier and scopes actually permit, which is cheaper
+   than planning a workflow and discovering the gap on the write call.
+2. **REST** — best for backend integrations and webhook receivers. The OpenAPI
+   contract at `/openapi.json` is the source of truth; the machine-readable
+   index of both lanes is `/.well-known/api-catalog` (RFC 9727).
+3. Either lane needs an Agent API Key (`Authorization: Bearer ptk_…`). A Free
+   key holds `signals:read` only and is capped at 10 requests/min per tool plus
+   200 requests/day across all tools — enough to evaluate us, not enough to run
+   a production loop.
+
+No key yet? The **documentation MCP server** at
+`https://polytrackers.com/api/mcp/docs` needs none: three read-only tools
+(`docs_list`, `docs_search`, `docs_get`) over the same published documentation
+`/llms.txt` indexes. Use it to read our docs over MCP before a human generates a
+key. It serves no live market, whale, or account data — that is the product
+server at `/api/mcp`.
+
+Reads are safe and cheap; writes are not. Mock writes only ever touch simulated
+wallets. Real trade execution places live orders on Polymarket: PolyTrackers
+stores your venue trading credentials encrypted and signs orders server-side, so
+the service is **not fully non-custodial** with respect to trading authority.
+Never call it without explicit, specific user approval for that exact order.
+
 ## Safety defaults
 
 - Treat all PolyTrackers outputs as informational decision support, not financial advice.
