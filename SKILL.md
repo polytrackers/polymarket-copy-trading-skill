@@ -297,16 +297,16 @@ bridge with `npx -y @polytrackers/mcp-stdio`.
 
 ### Hosted HTTP
 
-```jsonc
+```json
 {
   "mcpServers": {
     "polytrackers": {
       "url": "https://polytrackers.com/api/mcp",
       "headers": {
-        "Authorization": "Bearer ptk_...",
-      },
-    },
-  },
+        "Authorization": "Bearer ptk_..."
+      }
+    }
+  }
 }
 ```
 
@@ -314,16 +314,16 @@ bridge with `npx -y @polytrackers/mcp-stdio`.
 
 Add the same server block to Cursor's MCP configuration:
 
-```jsonc
+```json
 {
   "mcpServers": {
     "polytrackers": {
       "url": "https://polytrackers.com/api/mcp",
       "headers": {
-        "Authorization": "Bearer ptk_...",
-      },
-    },
-  },
+        "Authorization": "Bearer ptk_..."
+      }
+    }
+  }
 }
 ```
 
@@ -331,16 +331,16 @@ Add the same server block to Cursor's MCP configuration:
 
 Configure the stdio bridge as an MCP server for Codex, with the key supplied from your local secret store/environment:
 
-```jsonc
+```json
 {
   "mcpServers": {
     "polytrackers": {
       "url": "https://polytrackers.com/api/mcp",
       "headers": {
-        "Authorization": "Bearer ${POLYTRACKERS_API_KEY}",
-      },
-    },
-  },
+        "Authorization": "Bearer ${POLYTRACKERS_API_KEY}"
+      }
+    }
+  }
 }
 ```
 
@@ -350,7 +350,7 @@ Register an MCP server named `polytrackers` that runs the bridge with
 `npx -y @polytrackers/mcp-stdio` and reads `POLYTRACKERS_API_KEY` from the
 environment or secret manager:
 
-```jsonc
+```json
 {
   "mcpServers": {
     "polytrackers": {
@@ -359,10 +359,10 @@ environment or secret manager:
       "env": {
         "POLYTRACKERS_API_KEY": "${POLYTRACKERS_API_KEY}",
         "POLYTRACKERS_MCP_ALLOWED_HOSTS": "polytrackers.com",
-        "POLYTRACKERS_MCP_TIMEOUT_MS": "60000",
-      },
-    },
-  },
+        "POLYTRACKERS_MCP_TIMEOUT_MS": "60000"
+      }
+    }
+  }
 }
 ```
 
