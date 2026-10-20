@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-85a039c4ba8aec29b4c11f5ef9c07598da2550717956f2601f3366ed4e29c68d
+MCP catalog fingerprint: sha256-d72600bfa68878752962daf8a56540bd0016de2f22da8f7d5fe896b85c66cd20
 
 ## When to use PolyTrackers
 
@@ -280,7 +280,7 @@ permanently missed.
 
 1. Prefer `pt_mock_experiment_run` for composed simulation.
 2. For manual flows, create/list a mock wallet, refresh `pt_mock_price_get` when price confidence is stale or missing, then place a mock trade with dry-run first. `pt_mock_trade_place` sizes by notional `cost` in USD/USDC; `amount` is accepted as an alias for `cost`, `price_per_share` is accepted as an alias for `pricePerShare`, `size` and `shares` are not accepted sizing fields, and mock shares are derived as `cost / pricePerShare`. Inspect `warnings`, `price_normalization`, and `exposure_summary`, then resolve/reconcile as requested.
-3. Use `summary_only`, `limit`, `recent_trades`, or export `limit` on mock analytics when only aggregate or recent state is needed. Summary and compact analytics bound `mark_to_market` diagnostic samples and report exact omission counts; mock-copy recent rows and compact positions retain a bounded `entry_fill` block after verbose `signal_data` is removed. Request `projection:"detail"` only when every diagnostic id/basket is required. Treat `wallet.unrealized_pnl` from wallet list/get or analytics as a persisted snapshot: inspect `unrealized_pnl_marked_at`, and use `wallet_mark_to_market.preferred_unrealized_pnl` as the current-equity authority. A complete analytics pricing pass refreshes the snapshot after the read returns; partial or unavailable pricing leaves the prior mark untouched. A partial pass covering at least 90% of open positions still prefers the computed live value with unpriced legs held at cost basis; lower coverage falls back to the timestamped snapshot. Capability revision: `mock-analytics-entry-fill-v3`.
+3. Use `summary_only`, `limit`, `recent_trades`, or export `limit` on mock analytics when only aggregate or recent state is needed. Summary and compact analytics bound `mark_to_market` diagnostic samples and report exact omission counts; mock-copy recent rows and compact positions retain a bounded `entry_fill` block after verbose `signal_data` is removed. Request `projection:"detail"` only when every diagnostic id/basket is required. Treat `wallet.unrealized_pnl` from wallet list/get or analytics as a persisted snapshot: inspect `unrealized_pnl_marked_at`, and use `wallet_mark_to_market.preferred_unrealized_pnl` as the current-equity authority. Complete analytics pricing refreshes the snapshot after returning. A nonzero partial pass may initialize an unmarked wallet or replace a snapshot with strictly lower known coverage; unknown-quality and complete snapshots remain protected. Inspect `wallet_mark_to_market.coverage_ratio`, `persisted_coverage_ratio`, and `price_lookup_deferred_conditions`. A partial pass covering at least 90% of open positions or improving known stored coverage prefers the computed live value (`live_mark_to_market`), with unpriced legs held at cost basis. Other reads fall back to the timestamped snapshot. Large books retry shared-budget deferrals briefly; persistent pressure stays explicit. Capability revision: `mock-analytics-coverage-v4`.
 4. Label results as simulation only; do not imply live execution.
 
 ### API credit/subscription questions
