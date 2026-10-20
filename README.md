@@ -11,7 +11,7 @@ wallet.
 - **Website:** https://polytrackers.com
 - **Agent skill (canonical):** https://polytrackers.com/skill.md
 - **Agent guidance for automated clients:** https://polytrackers.com/llms.txt
-- **OpenAPI contract:** https://polytrackers.com/api/openapi.json
+- **OpenAPI contract:** https://polytrackers.com/openapi.json
 - **API docs:** https://polytrackers.com/docs/api
 
 ## Install
@@ -170,7 +170,7 @@ POLYTRACKERS_MCP_TIMEOUT_MS=60000                       # optional default
 
 Prefer REST when you are building a deterministic integration, backend service,
 dashboard, or webhook receiver, or when your client does not support MCP. The
-machine-readable contract is at https://polytrackers.com/api/openapi.json, and
+machine-readable contract is at https://polytrackers.com/openapi.json, and
 automated-client guidance (auth lanes, bot-detection, error shapes) is at
 https://polytrackers.com/llms.txt.
 

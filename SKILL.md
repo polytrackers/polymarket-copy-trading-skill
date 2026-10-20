@@ -124,7 +124,7 @@ Use REST/OpenAPI when:
 
 - You are building a deterministic integration, backend service, dashboard, or webhook receiver.
 - Your client does not support MCP.
-- You need direct endpoint control, custom pagination, or the machine-readable contract at `/api/openapi.json`.
+- You need direct endpoint control, custom pagination, or the machine-readable contract at `/openapi.json`.
 - You are integrating public feeds or service-auth endpoints outside an interactive agent session.
 
 Useful URLs:
@@ -136,7 +136,7 @@ Useful URLs:
 - MCP stdio bridge (npm): `npx -y @polytrackers/mcp-stdio`
 - API docs: `https://polytrackers.com/docs/api`
 - Markdown variants of the public pages: send `Accept: text/markdown` (list in `/llms.txt`)
-- OpenAPI JSON: `https://polytrackers.com/api/openapi.json`
+- OpenAPI JSON: `https://polytrackers.com/openapi.json` (`/api/openapi.json` is a 301 redirect to it)
 - Agent skill: `https://polytrackers.com/skill.md`
 - Anonymous card signals: `GET /api/market-signals?conditionIds=<comma-separated IDs>` returns only trailing-24-hour whale/anomaly booleans for up to 100 markets. Treat them as cached discovery hints, not live trading evidence.
 
