@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-85a039c4ba8aec29b4c11f5ef9c07598da2550717956f2601f3366ed4e29c68d
+catalog_fingerprint: sha256-c9f2afffe32daedb22b324454fb430c292cb216dd261439077da15c9a259fb14
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-d72600bfa68878752962daf8a56540bd0016de2f22da8f7d5fe896b85c66cd20
+MCP catalog fingerprint: sha256-c9f2afffe32daedb22b324454fb430c292cb216dd261439077da15c9a259fb14
 
 ## When to use PolyTrackers
 
@@ -184,6 +184,11 @@ Scopes:
 | `agent:full`    | Full agent writes, mock writes, paper/real-copy roster writes, webhooks, alerts, and real-trade write access where tier permits | Elite keys may request this scope. Use dry-run/preflight first.               |
 
 Key limits and expiry are enforced server-side. Each account keeps one active Agent API Key; rotate by revoking the old key, then generating a replacement and updating clients and agents. If a generated key is rejected by scope/tier checks, regenerate it with the required scope after confirming the account tier allows it.
+
+`pt_mock_auto_trade_set` accepts the bearer key without browser cookies and
+requires an explicit caller-owned `walletId` plus `agent:full` for placement.
+Another user's wallet returns `NOT_FOUND`. `dry_run:true` remains non-mutating;
+use `pt_mock_experiment_run` for strategy preview.
 
 ## Free vs Pro vs Elite availability
 
