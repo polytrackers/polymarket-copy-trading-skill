@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-c9f2afffe32daedb22b324454fb430c292cb216dd261439077da15c9a259fb14
+catalog_fingerprint: sha256-c29e0a17536c2ab0487054828e7ad380d02f692682a8e3ed1b2cb987048ab19d
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-c9f2afffe32daedb22b324454fb430c292cb216dd261439077da15c9a259fb14
+MCP catalog fingerprint: sha256-c29e0a17536c2ab0487054828e7ad380d02f692682a8e3ed1b2cb987048ab19d
 
 ## When to use PolyTrackers
 
@@ -425,3 +425,12 @@ ingestion/timing evidence, then `pt_backtest_run` for modeled copy-cost
 validation. One market sample guarantees neither durable flow nor profitable
 whales, and a passing backtest remains screening evidence rather than proof of
 live copy profitability.
+
+Copy horizon windows: `pt_mock_wallet_copy_config_get/update` and
+`pt_real_wallet_copy_config_get/update` expose `shortHorizonHours` and
+`sameDaySportsHours` (numeric 1–8,760 hours, default 24; no 168-hour cap).
+The existing `excludeShortHorizonMarkets` and `excludeSameDaySports` switches
+enable the respective BUY filters. Use `dry_run` to preview, then read back
+the saved config. Real updates retain `confirm_real_money:true`. SELLs remain
+unaffected; unknown-timing short-window identities and sports stay excluded
+when their corresponding switch is enabled.
