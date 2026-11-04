@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-c29e0a17536c2ab0487054828e7ad380d02f692682a8e3ed1b2cb987048ab19d
+catalog_fingerprint: sha256-c38037911842f58107e717833c62b535a5e141475ceb73edccb299550240d584
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-c29e0a17536c2ab0487054828e7ad380d02f692682a8e3ed1b2cb987048ab19d
+MCP catalog fingerprint: sha256-c38037911842f58107e717833c62b535a5e141475ceb73edccb299550240d584
 
 ## When to use PolyTrackers
 
@@ -434,3 +434,24 @@ enable the respective BUY filters. Use `dry_run` to preview, then read back
 the saved config. Real updates retain `confirm_real_money:true`. SELLs remain
 unaffected; unknown-timing short-window identities and sports stay excluded
 when their corresponding switch is enabled.
+
+Wallet decision summaries: call `pt_whale_activity_get` with `summary:true`,
+`walletId`, and inclusive `since`/`until` bounds spanning at most 31 days.
+Optional `whale` scopes the stored decisions; `top_n` is 1–20 (default 10).
+The result has `summary.count`, `by_reason_side`, `by_reason` and
+`top_conditions` (conditions ranked by known whale USD notional, ties by ID).
+Each group reports count, summed `whale_amount_usdc`, missing-notional count
+and distinct condition count; top conditions report count, known notional and
+missing-notional count. Null reasons/sides remain null; do not infer BUY from
+skip reason or confuse whale notional with the follower's copy stake.
+This is one aggregate over retained stored decisions, excluding duplicate-signal
+and superseded rows within that window. It excludes canonical previews, orphaned
+traces and alert overlays. Visibility aggregates remain representative samples,
+so the result is not a full whale trade-tape or historical-retention guarantee.
+Free-tier five-whale scope and exclusive 24-hour delay cutoff remain enforced;
+`window.delay_before` discloses the effective cutoff. Empty scoped windows return
+zero and empty groups. Missing notionals are not silently counted as known zero.
+Do not pass row `limit`, `cursor`, projections, open or mirror-eligibility filters
+with summary mode. Row calls are unchanged. Timeout, missing migration and
+oversized summaries return an error, never partial counts; narrow the window or
+whale filter when necessary.
