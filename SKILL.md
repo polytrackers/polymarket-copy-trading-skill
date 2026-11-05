@@ -455,3 +455,25 @@ Do not pass row `limit`, `cursor`, projections, open or mirror-eligibility filte
 with summary mode. Row calls are unchanged. Timeout, missing migration and
 oversized summaries return an error, never partial counts; narrow the window or
 whale filter when necessary.
+
+### Maximum resolution time per copied whale
+
+Set `maxResolutionDays` with `pt_roster_update` or `PATCH /api/roster/{address}`.
+Use `fromWalletId` to select the whale's assignment in a specific paper or real
+copy wallet. An integer **1–3650** limits new BUYs to markets whose scheduled end
+is between now and that many rolling 24-hour days from now, inclusive. `null`
+removes the limit; omitting the field preserves it. The default is no limit.
+`pt_roster_get`, `pt_roster_list`, and REST roster reads return the saved value.
+
+When enabled, missing, invalid, or already-past market end dates skip the BUY
+with `MIRROR_SKIPPED_MAX_RESOLUTION_DAYS`. Sports start times are not resolution
+times. This combines with existing minimum-horizon filters; contradictory
+settings can leave no eligible markets. Existing positions and SELLs are
+unaffected. The scheduled market end is an estimate: actual settlement may take
+longer, so this is not a guarantee that funds unlock by the limit.
+
+Example: `pt_roster_update({address: "<whale-address>", fromWalletId:
+"<wallet-id>", maxResolutionDays: 7, dry_run: true})`. Review the preview, then
+repeat with `dry_run: false` to save. Set this separately from reactivation or a
+wallet move. For a new whale, add watch-only (`copyEnabled: false`), configure the
+limit, then enable copying. Never silently enable copying while setting a limit.
