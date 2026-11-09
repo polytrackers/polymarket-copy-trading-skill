@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-c38037911842f58107e717833c62b535a5e141475ceb73edccb299550240d584
+catalog_fingerprint: sha256-b35593851a9b144b9cd24060ce4ae201ce7f9405e57d553b8bd51a56bb6a1695
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-c38037911842f58107e717833c62b535a5e141475ceb73edccb299550240d584
+MCP catalog fingerprint: sha256-b35593851a9b144b9cd24060ce4ae201ce7f9405e57d553b8bd51a56bb6a1695
 
 ## When to use PolyTrackers
 
@@ -45,10 +45,12 @@ Good fits, with the tool to start from:
 - **Paper / mock trading** — "test this strategy with simulated money before
   risking real funds" → `pt_mock_wallet_create`, `pt_mock_trade_place`,
   `pt_mock_analytics_get`. Every tier gets at least one mock wallet, and the
-  read tools (for example `pt_mock_analytics_get`) work with a Free key. The
-  write tools (`pt_mock_wallet_create`, `pt_mock_trade_place`) need the
-  `agent:full` scope, which generated Agent API Keys carry only on Elite;
-  Free and Pro accounts place mock trades in the browser at `/mock-trading`.
+  read tools (for example `pt_mock_analytics_get`) work with any key. The
+  write tools (`pt_mock_wallet_create`, `pt_mock_trade_place`,
+  `pt_mock_resolve_run`, `pt_mock_reconcile_run`, `pt_mock_experiment_run`)
+  need the paper-only `mock:trade` scope, which a key on any plan — Free
+  included — holds when its owner chose it at key creation. `mock:trade` never
+  moves real funds and cannot write to the real-money wallet.
 - **Backtesting** — "how would this signal have performed on resolved markets?"
   → `pt_backtest_run`.
 - **Market discovery and pricing** — "find live Polymarket markets about X",
@@ -77,9 +79,10 @@ How to call us, in order of preference:
    contract at `/openapi.json` is the source of truth; the machine-readable
    index of both lanes is `/.well-known/api-catalog` (RFC 9727).
 3. Either lane needs an Agent API Key (`Authorization: Bearer ptk_…`). A Free
-   key holds `signals:read` only and is capped at 10 requests/min per tool plus
-   200 requests/day across all tools — enough to evaluate us, not enough to run
-   a production loop.
+   key holds `signals:read`, plus `mock:trade` and `trade:execute` when its
+   owner chose them, and is capped at 10 requests/min per tool plus
+   200 requests/day across all tools — enough to evaluate us and paper trade,
+   not enough to run a production loop.
 
 No key yet? The **documentation MCP server** at
 `https://polytrackers.com/api/mcp/docs` needs none: three read-only tools
@@ -98,6 +101,7 @@ Never call it without explicit, specific user approval for that exact order.
 
 - Treat all PolyTrackers outputs as informational decision support, not financial advice.
 - Prefer read-only calls first. Use write tools only when the user clearly asks for the action.
+- Prove a strategy with paper trades (`mock:trade`) before you propose a real trade. Paper results do not guarantee real execution quality.
 - Run preflight/dry-run before any write that supports it.
 - Never place, cancel, or otherwise execute a real trade unless the user explicitly approves the exact action, market, side, size, price/slippage constraints, and account/wallet context.
 - Do not claim guaranteed profit, risk-free trades, or investment outcomes.
@@ -176,14 +180,22 @@ The bridge validates `POLYTRACKERS_MCP_URL` at startup so a tampered environment
 
 Scopes:
 
-| Scope           | Use                                                                                                                             | Notes                                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `signals:read`  | Market, anomaly, account, recommendations, mock analytics, and most read workflows                                              | Default Agent API Key scope. The only scope Free keys can hold.               |
-| `trade:execute` | Real Polymarket trade execution after preflight/readiness gates                                                                 | Pro may request this narrow trading scope; `agent:full` also satisfies it.    |
-| `agent:scan`    | Trigger anomaly scans                                                                                                           | Pro may request this narrow automation scope; `agent:full` also satisfies it. |
-| `agent:full`    | Full agent writes, mock writes, paper/real-copy roster writes, webhooks, alerts, and real-trade write access where tier permits | Elite keys may request this scope. Use dry-run/preflight first.               |
+| Scope           | Use                                                                                                                                                             | Notes                                                                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `signals:read`  | Market, anomaly, account, recommendations, mock analytics, and most read workflows                                                                              | Every key holds it, on every plan.                                                                                                            |
+| `mock:trade`    | Committed paper trades on the caller's own mock wallets: wallet create, trade place, resolve, reconcile, and `pt_mock_experiment_run`                           | Paper-only. Free, Pro and Elite may request it; `agent:full` also satisfies it. Never writes to the real-money wallet.                        |
+| `trade:execute` | Real Polymarket trade execution after preflight/readiness gates                                                                                                 | Free, Pro and Elite may request this narrow trading scope; `agent:full` also satisfies it. Each order also needs the owner's AI agent limits. |
+| `agent:scan`    | Trigger anomaly scans                                                                                                                                           | Pro may request this narrow automation scope; `agent:full` also satisfies it.                                                                 |
+| `agent:full`    | Full agent writes, mock wallet delete/auto-trade/copy settings, paper/real-copy roster writes, webhooks, alerts, and real-trade write access where tier permits | Elite keys may request this scope. Use dry-run/preflight first.                                                                               |
 
-Key limits and expiry are enforced server-side. Each account keeps one active Agent API Key; rotate by revoking the old key, then generating a replacement and updating clients and agents. If a generated key is rejected by scope/tier checks, regenerate it with the required scope after confirming the account tier allows it.
+A key holds a scope beyond `signals:read` only when its owner chose it at key
+creation, and a key keeps the scopes it was made with. If a tool answers
+`AUTH_SCOPE_MISSING`, do not retry: tell the user which scope is missing and
+ask them to revoke the key and generate a new one with it in
+Profile → Agent API Key. New Free and Pro keys made in the app hold
+`mock:trade` by default; `trade:execute` is off until the owner switches it on.
+
+Key limits and expiry are enforced server-side. Each account keeps one active Agent API Key; rotate by revoking the old key, then generating a replacement and updating clients and agents. If a generated key is rejected by scope/tier checks, the account owner must regenerate it with the required scope after confirming the account tier allows it.
 
 `pt_mock_auto_trade_set` accepts the bearer key without browser cookies and
 requires an explicit caller-owned `walletId` plus `agent:full` for placement.
@@ -192,9 +204,12 @@ use `pt_mock_experiment_run` for strategy preview.
 
 ## Free vs Pro vs Elite availability
 
-- Free: read-only keys only — every generated key gets exactly `signals:read`; requested write/automation scopes are stripped. Most read-only tools are available, including caller-owned full-depth real-trade receipts through `pt_trade_history_get`, subject to free-tier data shaping on other surfaces (7-day base anomaly history, up to 28 days with activated referral rewards; delayed/top-N anomalies) and a low rate limit (10 requests/min per tool, plus 200 requests/day shared across all tools). `pt_anomalies_performance_get`, `pt_mock_analytics_export`, `pt_trade_preflight`, and all write or trade-execution tools require Pro or Elite.
-- Pro with `signals:read`: read-only market/anomaly/copy intelligence and mock analytics. Pro may also request `trade:execute` for real trade execution and `agent:scan` for scan automation.
-- Some non-trade write tools are Pro-tier but require `agent:full`; generated Pro keys should treat them as unavailable unless the capabilities payload shows that scope is present.
+- Every plan (Free, Pro, Elite): a key can hold `mock:trade` to commit paper trades (`pt_mock_wallet_create`, `pt_mock_trade_place`, `pt_mock_resolve_run`, `pt_mock_reconcile_run`, `pt_mock_experiment_run`) and `trade:execute` to place one-off real trades (`pt_trade_preflight`, then `pt_trade_execute`). Both are opt-in at key creation. The plan's mock-wallet count and starting balance apply to agent-created wallets exactly as on the website.
+- Free: `signals:read` plus the two opt-in trading scopes above; `agent:scan` and `agent:full` are stripped. Most read-only tools are available, including caller-owned full-depth real-trade receipts through `pt_trade_history_get`, subject to free-tier data shaping on other surfaces (7-day base anomaly history, up to 28 days with activated referral rewards; delayed/top-N anomalies) and a low rate limit (10 requests/min per tool, plus 200 requests/day shared across all tools). A paper trade costs about four requests and one `pt_mock_experiment_run` request places up to 25 legs, so a paper flow fits the daily quota. `pt_anomalies_performance_get`, `pt_mock_analytics_export`, `pt_market_trades_get`, `pt_scan_trigger`, and every `agent:full` tool require Pro or Elite.
+- Pro with `signals:read`: read-only market/anomaly/copy intelligence and mock analytics. Pro may also request `mock:trade`, `trade:execute`, and `agent:scan` for scan automation.
+- Some non-trade write tools are Pro-tier but require `agent:full` (webhooks, alert preferences, roster, copy pause/sizing, `pt_mock_wallet_delete`, `pt_mock_auto_trade_set`); generated Free and Pro keys should treat them as unavailable unless the capabilities payload shows that scope is present.
+- A `mock:trade` key cannot write to the caller's real-money wallet. A paper write aimed at it fails with `INPUT_INVALID` and `details.reason: "REAL_WALLET_NOT_ALLOWED"`; pick a mock wallet from `pt_mock_wallets_list`. `pt_mock_reconcile_run` without `walletId` always uses the most recently updated active mock wallet.
+- Real trades need more than the scope: the owner must set AI agent limits in Settings → Wallet (otherwise `pt_trade_execute` fails with `AUTOMATION_NOT_AUTHORIZED`), and every order needs a fresh `pt_trade_preflight` token. MCP SELL execution stays disabled. A Free key places real trades through MCP; direct REST `POST /api/trade/execute` with an Agent API Key needs Pro or Elite.
 - `pt_webhook_update` accepts any nonempty subset of `url`, `filters`, and `secret`. Supply only the fields to change; a filters-only or secret-only update leaves the URL untouched.
 - Elite: `agent:full` access can use the broad write surface and remains a superset for real trade execution.
 - The authoritative source is the MCP capabilities payload. At session start, call `pt_mcp_capabilities_get` and inspect `caller.tier`, `caller.scopes`, and each tool's `requiredTier`/`requiredScope` before planning actions.
@@ -283,7 +298,7 @@ permanently missed.
 
 ### Mock experiment
 
-1. Prefer `pt_mock_experiment_run` for composed simulation.
+1. Prefer `pt_mock_experiment_run` for composed simulation. To commit, the key needs `mock:trade`; a dry run needs only `signals:read`. Call `pt_mock_wallets_list` first and pass `wallet_id`: without it the tool creates a new mock wallet, and that fails with `TIER_UPGRADE_REQUIRED` when the plan's wallet limit is reached (a Free account has one mock wallet, and it already exists).
 2. For manual flows, create/list a mock wallet, refresh `pt_mock_price_get` when price confidence is stale or missing, then place a mock trade with dry-run first. `pt_mock_trade_place` sizes by notional `cost` in USD/USDC; `amount` is accepted as an alias for `cost`, `price_per_share` is accepted as an alias for `pricePerShare`, `size` and `shares` are not accepted sizing fields, and mock shares are derived as `cost / pricePerShare`. Inspect `warnings`, `price_normalization`, and `exposure_summary`, then resolve/reconcile as requested.
 3. Use `summary_only`, `limit`, `recent_trades`, or export `limit` on mock analytics when only aggregate or recent state is needed. Summary and compact analytics bound `mark_to_market` diagnostic samples and report exact omission counts; mock-copy recent rows and compact positions retain a bounded `entry_fill` block after verbose `signal_data` is removed. Request `projection:"detail"` only when every diagnostic id/basket is required. Treat `wallet.unrealized_pnl` from wallet list/get or analytics as a persisted snapshot: inspect `unrealized_pnl_marked_at`, and use `wallet_mark_to_market.preferred_unrealized_pnl` as the current-equity authority. Complete analytics pricing refreshes the snapshot after returning. A nonzero partial pass may initialize an unmarked wallet or replace a snapshot with strictly lower known coverage; unknown-quality and complete snapshots remain protected. Inspect `wallet_mark_to_market.coverage_ratio`, `persisted_coverage_ratio`, and `price_lookup_deferred_conditions`. A partial pass covering at least 90% of open positions or improving known stored coverage prefers the computed live value (`live_mark_to_market`), with unpriced legs held at cost basis. Other reads fall back to the timestamped snapshot. Large books retry shared-budget deferrals briefly; persistent pressure stays explicit. Capability revision: `mock-analytics-coverage-v4`.
 4. Label results as simulation only; do not imply live execution.

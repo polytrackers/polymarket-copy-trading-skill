@@ -4,8 +4,8 @@ Copy trading and paper (mock) trading for Polymarket, built for AI agents. This
 repo packages the **PolyTrackers Agent Skill** plus MCP server config so Claude,
 Cursor, Codex, OpenClaw, and other MCP hosts can pull Polymarket market
 intelligence, whale tracking, anomaly detection, and copy-trading review, then
-use tier-gated paper-trading and real-trade workflows. Free MCP access is
-read-only; the separate PolyTrackers web app includes a free $10K virtual
+paper trade and, when the account owner allows it, place real trades. Both work
+on every plan, Free included. A free account starts with a $10K virtual
 wallet.
 
 - **Website:** https://polytrackers.com
@@ -29,23 +29,26 @@ https://polytrackers.com/skill.md.
 
 ## Free tier
 
-You can start for free — no card required — through two distinct surfaces:
+You can start for free — no card required:
 
 - **Free MCP access.** Free accounts can generate a scoped Agent API Key
-  (`ptk_...`). Free MCP access is read-only and uses exactly the `signals:read`
-  scope. It covers market, anomaly, account, and recommendation reads plus mock
-  wallet inspection, live mock prices, P&L summaries, and the caller's own
-  full-depth real-trade receipts. It does not include MCP writes or mock
-  analytics export. Free-tier data shaping applies to other read surfaces,
-  with 10 requests/min per tool plus 200 requests/day shared across all tools.
-- **Free web-app mock trading.** Separately from MCP, a free account can use one
-  mock wallet in the PolyTrackers web app. It starts with $10,000 in virtual
-  funds for testing strategies against live Polymarket odds. See
-  https://polytrackers.com/polymarket-paper-trading.
+  (`ptk_...`). Every key holds `signals:read`. It covers market, anomaly,
+  account, and recommendation reads plus mock wallet inspection, live mock
+  prices, P&L summaries, and the caller's own full-depth real-trade receipts.
+  The account owner can also give the key two narrow write scopes when they
+  create it: `mock:trade` for committed paper trades and `trade:execute` for
+  one-off real trades. A Free key cannot hold the scan scope or the broad
+  `agent:full` scope, and mock analytics export needs Pro. Free-tier data
+  shaping applies to other read surfaces, with 10 requests/min per tool plus
+  200 requests/day shared across all tools.
+- **Free mock wallet.** A free account gets one mock wallet. It starts with
+  $10,000 in virtual funds for testing strategies against live Polymarket odds.
+  You can trade it in the web app, and your agent can trade it through MCP with
+  `mock:trade`. See https://polytrackers.com/polymarket-paper-trading.
 
-Pro adds optional narrow real-trade and scan scopes, mock analytics export, and
-larger history windows. Elite adds `agent:full` for broad writes, including
-committed mock trades. The authoritative source for what your key can do is the
+Pro adds the optional scan scope, mock analytics export, and larger history
+windows. Elite adds `agent:full` for broad writes such as webhooks, alerts,
+roster and copy-trading settings. The authoritative source for what your key can do is the
 live MCP capabilities payload (`pt_mcp_capabilities_get`); pricing and upgrade
 details live in the PolyTrackers account/subscription UI.
 
@@ -70,17 +73,20 @@ Mock-wallet caps and initial virtual balances are:
   report excludes pre-#1860 bid-side mock quotes by default.
 - **Anomaly detection** — list/inspect anomaly signals with tier-gated history
   and (Pro+) scan triggering.
-- **Paper / mock trading (tier-gated over MCP)** — Free MCP access can inspect
-  mock wallets, prices, and P&L summaries. Committed mock writes require
-  `agent:full`, which normal Agent API Key generation provides only on Elite;
-  that includes creating wallets, placing simulated trades (sized by notional
-  `cost`), setting a paper-only 1–100x whale-copy sizing multiplier, and
-  resolving/reconciling positions. Existing risk ceilings still apply; real
-  copies stay 1x. Mock analytics export requires Pro or Elite with
-  `signals:read`.
-- **Real trade execution (Pro/Elite, gated)** — `pt_trade_preflight` then
+- **Paper / mock trading (every plan)** — Any key can inspect mock wallets,
+  prices, and P&L summaries. A key with the paper-only `mock:trade` scope, which
+  Free, Pro and Elite accounts can all choose at key creation, can create a mock
+  wallet, place simulated trades (sized by notional `cost`), close and reconcile
+  positions, and run `pt_mock_experiment_run`. `mock:trade` never moves real
+  funds and cannot write to the real-money wallet. Deleting a mock wallet,
+  auto-trade, and the paper-only 1–100x whale-copy sizing multiplier still
+  require `agent:full`, which normal Agent API Key generation provides only on
+  Elite. Existing risk ceilings still apply; real copies stay 1x. Mock
+  analytics export requires Pro or Elite with `signals:read`.
+- **Real trade execution (every plan, gated)** — `pt_trade_preflight` then
   `pt_trade_execute` only after explicit user approval, with idempotency and
-  preflight-token safeguards.
+  preflight-token safeguards. The key needs the `trade:execute` scope, and the
+  account owner must set AI agent limits in Wallet settings first.
 
 Full tool groups, scopes, and safety rules are in [`SKILL.md`](./SKILL.md).
 
