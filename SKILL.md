@@ -41,7 +41,17 @@ Good fits, with the tool to start from:
   `pt_anomaly_context_get`.
 - **Copy-trading review** — "is this whale worth mirroring?", "what did my copy
   roster do this week?" → `pt_recommendations_get`, `pt_copy_trading_digest_get`,
-  `pt_trader_lookup`.
+  `pt_trader_lookup`. The evidence behind a review is readable too:
+  `pt_whale_performance_get` returns the caller's own result with each copied
+  trader (realized P&L, win rate, highest and lowest single-trade P&L);
+  `pt_whale_activity_get` returns the stable skip reason on each copy decision,
+  and with `summary:true` the decision counts by reason for one wallet; Pro+
+  `pt_backtest_run` with a whale source and `costModel=copy` charges fees and
+  slippage measured from real copy receipts and replays the trailing 30 days as
+  a separate holdout; `pt_whale_forward_returns_get` measures forward returns
+  for up to 50 wallets from a chosen start date; and the Elite, MCP-only
+  `pt_copy_parity_report_get` pairs the caller's paper copies with the live
+  copies of the same market.
 - **Paper / mock trading** — "test this strategy with simulated money before
   risking real funds" → `pt_mock_wallet_create`, `pt_mock_trade_place`,
   `pt_mock_analytics_get`. Every tier gets at least one mock wallet, and the
