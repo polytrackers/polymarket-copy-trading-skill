@@ -105,7 +105,9 @@ How to call us, in order of preference:
 No key yet? The **documentation MCP server** at
 `https://polytrackers.com/api/mcp/docs` needs none: three read-only tools
 (`docs_list`, `docs_search`, `docs_get`) over the same published documentation
-`/llms.txt` indexes. Use it to read our docs over MCP before a human generates a
+`/llms.txt` indexes and this complete skill guide. Retrieve it with
+`docs_get({"document":"/skill.md"})` or read the MCP resource
+`https://polytrackers.com/skill.md`; `docs_list({"kind":"guide"})` discovers it. Use it to read our docs over MCP before a human generates a
 key. It serves no live market, whale, or account data — that is the product
 server at `/api/mcp`.
 
@@ -518,3 +520,24 @@ Example: `pt_roster_update({address: "<whale-address>", fromWalletId:
 repeat with `dry_run: false` to save. Set this separately from reactivation or a
 wallet move. For a new whale, add watch-only (`copyEnabled: false`), configure the
 limit, then enable copying. Never silently enable copying while setting a limit.
+
+### Copy size scale
+
+`pt_mock_wallet_copy_config_get/update` and
+`pt_real_wallet_copy_config_get/update` expose wallet-default `copySizeScalePct`
+(0.01–100 percent, default 100). Omit to preserve; set 100 to reset; null is
+invalid. `pt_roster_list/get` return each assignment's nullable override.
+`pt_roster_update` accepts the same range, or null to inherit the wallet default;
+omission preserves it. An override replaces the default rather than multiplying
+it. Select the assignment with `fromWalletId`, preview with `dry_run:true`, then
+read back the wallet config and roster row. Set the override separately from
+reactivation or wallet reassignment. For a new whale, add watch-only with
+`copyEnabled:false`, set the scale, then explicitly enable copying.
+
+The scale affects paper and real BUYs, including fixed stakes, before the
+mandatory $1 minimum and existing risk/authorization limits. Small copies scale
+up only when existing `smallOrderPolicy` and signed permission allow; otherwise
+they skip. SELLs are unchanged. Wallet-default tools require Elite plus
+`agent:full`; roster edits require Pro/Elite plus `agent:full`. Real-wallet
+default updates require `confirm_real_money:true` even for previews; committed
+updates retain their audit event and security email.
