@@ -51,7 +51,15 @@ Good fits, with the tool to start from:
   a separate holdout; `pt_whale_forward_returns_get` measures forward returns
   for up to 50 wallets from a chosen start date; and the Elite, MCP-only
   `pt_copy_parity_report_get` pairs the caller's paper copies with the live
-  copies of the same market.
+  copies of the same market. For curated-published wallets,
+  `pt_recommendations_get`, `pt_trader_lookup`, and `pt_trader_profile_get`
+  also return the A–F trader grade, confidence tier, nine nullable component
+  scores and scored-at time (`trader_grade`, else null). Inputs: settled return,
+  recent activity, market-maker/bot screens, trade frequency, sample size,
+  heavy-favorite penalty, time to payout, trade-size fit and the completed
+  14-day forward paper window. The grade describes past results; the copy
+  backtest is a separate admission check. Method:
+  https://polytrackers.com/polymarket-trader-grade
 - **Paper / mock trading** — "test this strategy with simulated money before
   risking real funds" → `pt_mock_wallet_create`, `pt_mock_trade_place`,
   `pt_mock_analytics_get`. Every tier gets at least one mock wallet, and the
@@ -288,6 +296,14 @@ permanently missed.
 4. Respect 429 responses and `Retry-After`; do not loop scan requests.
 
 ### Copy-trading review
+
+Use `pt_recommendations_get` or `pt_trader_profile_get` for the published
+`trader_grade` (A–F, confidence, nine nullable component scores, scored_at).
+REST returns the same object on recommendations and trader lookup.
+Unpublished, mismatched or unavailable grades are null; never infer why.
+A null component is unknown, not zero. The grade describes past results;
+retain the separate capital-accounting copy backtest gate. The inputs and
+method are listed in "When to use PolyTrackers" above.
 
 1. Use `pt_copy_trading_digest_get` or combine `pt_recommendations_get`, `pt_trader_profile_get`, `pt_whale_activity_get`, and `pt_whale_performance_get`. `pt_whale_performance_get` and digest `top_copied_traders` are user-scoped aggregates across all active paper copy wallets plus attributed active real-copy fills; inspect `data.whaleScope`, and use `pt_leaderboard_get` for platform-global discovery. For fresh mirrorable copy flow, pass `fresh_only:true` and `durable_only:true`; inspect `digest_activity_profile` plus each section `durable_filter` because filtered rows remain counted and same-day sports/in-play flow is not execution permission. For wallet-shaped suggestion/trader sections, `durable_only` uses the same recent-flow majority predicate as `EPHEMERAL_FLOW`: majority-ephemeral and unknown-coverage rows are excluded, known dormant rows remain eligible, and returned compact rows expose `durability_profile` source/window/count/freshness provenance. Historical sports durability uses trade/event timing, never query age. Missing/conflicting timing stays unknown, including bare composites. Inspect per-trade `activity_profile.timing_basis`/`timing_uncertainty`; recognized fixture slug dates carry explicit calendar/time-zone uncertainty. Wallet `durability_profile.durability_evidence` and actionability `recent_activity.durability_evidence` preserve timing counts, `notional_coverage_ratio`, known-notional shares, `majority_basis`, loaded window bounds, and `sample_truncated` through compact/cursor responses. Shares divide by known USDC notional, not unknown amounts; a notional majority demotes only with at least 90% known-notional trade coverage and an uncapped sample. A 1,000-row sample is not complete history. Unknown timing without a durable count majority is excluded by `durable_only`. No returned wallet row under `durable_only:true` should carry `EPHEMERAL_FLOW`. When a digest section returns `next_cursor`, pass that opaque cursor back with the same dataset filters. The short signed cursor is bound to the issuing Agent API Key and an integrity-checked shared server-side section snapshot retained for at most one hour; leaderboard-derived suggestions cannot outlive the upstream `staleExpiresAt`. Every continuation row is reconstructed from that retained projection, so later inserts, deletes, or reranking—including same-identity field mutations—cannot shift, rewrite, or evict retained rows. A cursor is issued only after shared persistence is confirmed. If the page instead reports `terminal_reason:"shared_snapshot_persistence_unavailable"`, it intentionally returns no cursor; start a new digest later rather than retrying a nonexistent continuation. Reuse with another key or different filters is rejected, and an expired snapshot requires a new digest request. Omit `sections` on the continuation to request only that cursor's section. A recovered tail row retains bounded trade/activity wallet, P&L/cost, status, time, and signal context or recommendation/trader ranking and evidence fields when present; when it has left the live source window, it is marked `snapshot_compacted_for_cursor:true` and counted by `snapshot_fallback_count`. `top_copied_traders` keeps the production `data.whales` envelope during pagination. If the first remaining row in any section exceeds the byte cap, the digest returns a bounded compact summary instead of a non-progressing empty page.
    Wallet-scoped `recent_mock_copy_trades` rows retain bounded `whaleWallet`, `whaleAlias`, and optional `entry_fill` fields when stored, through summaries, byte compaction, and cursor continuation. `entry_fill` reports requested/filled USD, fill fraction, depth/slippage limiting flags, and bounded clamp reasons; it is observability only and does not resize a trade. Use these fields for per-whale P&L stops and thin-book review without falling back to analytics or direct storage. With `since`, this section returns both new rows and existing rows whose status, close/resolution time, or realized P&L changed at or after the cutoff; inspect `lifecycleUpdatedAt` for the change clock. Capability revision: `copy-digest-entry-fill-v18`.
