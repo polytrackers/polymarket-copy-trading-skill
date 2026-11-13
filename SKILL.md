@@ -377,7 +377,7 @@ Add the same server block to Cursor's MCP configuration:
 
 ### Codex
 
-Configure the stdio bridge as an MCP server for Codex, with the key supplied from your local secret store/environment:
+Use the hosted endpoint when your Codex MCP config supports remote HTTP servers, with the key supplied from your local secret store/environment. If it does not, use the stdio bridge under "Stdio-only hosts" below:
 
 ```json
 {
