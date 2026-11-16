@@ -38,16 +38,21 @@ You can start for free — no card required:
   The account owner can also give the key two narrow write scopes when they
   create it: `mock:trade` for committed paper trades and `trade:execute` for
   one-off real trades. A Free key cannot hold the scan scope or the broad
-  `agent:full` scope, and mock analytics export needs Pro. Free-tier data
-  shaping applies to other read surfaces, with 10 requests/min per tool plus
-  200 requests/day shared across all tools.
+  `agent:full` scope, nor the Pro monitor scope `monitors:write`, and mock
+  analytics export needs Pro. Free-tier data shaping applies to other read
+  surfaces, with 10 requests/min per tool plus 200 requests/day shared across
+  all tools.
+- **Free sportsbook-gap scans.** A Free key can run the sportsbook-gap scanner
+  (`pt_sports_gaps_list`) and gets the top 3 results per search, with the same
+  data, freshness and calculation as paid plans.
 - **Free mock wallet.** A free account gets one mock wallet. It starts with
   $10,000 in virtual funds for testing strategies against live Polymarket odds.
   You can trade it in the web app, and your agent can trade it through MCP with
   `mock:trade`. See https://polytrackers.com/polymarket-paper-trading.
 
-Pro adds the optional scan scope, mock analytics export, and larger history
-windows. Elite adds `agent:full` for broad writes such as webhooks, alerts,
+Pro adds the optional scan scope, mock analytics export, larger history
+windows, and saved sportsbook-gap monitors (the optional `monitors:write`
+scope, up to 5 active). Elite adds `agent:full` for broad writes such as webhooks, alerts,
 roster and copy-trading settings. The authoritative source for what your key can do is the
 live MCP capabilities payload (`pt_mcp_capabilities_get`); pricing and upgrade
 details live in the PolyTrackers account/subscription UI.
@@ -73,6 +78,14 @@ Mock-wallet caps and initial virtual balances are:
   report excludes pre-#1860 bid-side mock quotes by default.
 - **Anomaly detection** — list/inspect anomaly signals with tier-gated history
   and (Pro+) scan triggering.
+- **Sportsbook gap (NBA and NFL game winners)** — `pt_sports_gaps_list`
+  compares the sportsbook consensus with the all-in Polymarket price for a
+  given purchase size, after fees, and reports the difference in percentage
+  points. Agents can requote and paper trade a result
+  (`pt_sports_gap_paper_trade`), keep a search running as a Pro monitor
+  (`pt_sports_gap_monitor_create`, `monitors:write`), and test the same
+  criteria on collected history (`pt_sports_gap_rule_test`, Pro+). A gap is a
+  price difference, not a sure profit.
 - **Paper / mock trading (every plan)** — Any key can inspect mock wallets,
   prices, and P&L summaries. A key with the paper-only `mock:trade` scope, which
   Free, Pro and Elite accounts can all choose at key creation, can create a mock

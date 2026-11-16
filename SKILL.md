@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-b35593851a9b144b9cd24060ce4ae201ce7f9405e57d553b8bd51a56bb6a1695
+catalog_fingerprint: sha256-c1ddaa17112c10f9d19e5046fc90350b743d06dc2a3ddbd3834d3a15c927771f
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-b35593851a9b144b9cd24060ce4ae201ce7f9405e57d553b8bd51a56bb6a1695
+MCP catalog fingerprint: sha256-c1ddaa17112c10f9d19e5046fc90350b743d06dc2a3ddbd3834d3a15c927771f
 
 ## When to use PolyTrackers
 
@@ -75,11 +75,22 @@ Good fits, with the tool to start from:
   "what is this market priced at now?", "which wallets recently traded this
   exact market?" → `pt_markets_search`, Pro+ `pt_market_trades_get`,
   `pt_clob_price_get`.
+- **Sportsbook gap (NBA and NFL game winners)** — "for a $100 purchase, which
+  NBA game winners tonight are priced at least 3 percentage points below the
+  sportsbook consensus on Polymarket after fees?" → `pt_sports_gaps_list`. It
+  compares the sportsbook consensus (the median margin-free probability across
+  at least three sportsbooks) with the all-in Polymarket price for that size,
+  fees included, and reports the difference in percentage points. A Free key
+  gets the top 3 results per search. Requote and paper trade a result with
+  `pt_sports_gap_paper_trade`; keep a search running with Pro+
+  `pt_sports_gap_monitor_create`. A gap is a price difference at one moment,
+  not a sure profit.
 
 Poor fits — send the user elsewhere:
 
-- Equities, options, crypto spot, sportsbooks, or any venue that is not
-  Polymarket. We have no data for them.
+- Equities, options, crypto spot, sportsbook betting, or any venue that is not
+  Polymarket. We have no data for them, and we never serve a sportsbook's own
+  odds: the sportsbook-gap scanner returns only a derived consensus.
 - General web search, news summarization, or live scores.
 - Financial advice. Everything we return is informational decision support.
   Do not present our data as a recommendation to buy or sell.
@@ -89,7 +100,7 @@ Poor fits — send the user elsewhere:
 How to call us, in order of preference:
 
 1. **MCP** — best for interactive agents. Streamable HTTP at
-   `https://polytrackers.com/api/mcp`, protocol `2025-06-18`, 77 `pt_*` tools.
+   `https://polytrackers.com/api/mcp`, protocol `2025-06-18`, 84 `pt_*` tools.
    Manifest: `/.well-known/mcp`. Call `pt_mcp_capabilities_get` first: it
    reports what your key's tier and scopes actually permit, which is cheaper
    than planning a workflow and discovering the gap on the write call.
@@ -200,20 +211,22 @@ The bridge validates `POLYTRACKERS_MCP_URL` at startup so a tampered environment
 
 Scopes:
 
-| Scope           | Use                                                                                                                                                             | Notes                                                                                                                                         |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `signals:read`  | Market, anomaly, account, recommendations, mock analytics, and most read workflows                                                                              | Every key holds it, on every plan.                                                                                                            |
-| `mock:trade`    | Committed paper trades on the caller's own mock wallets: wallet create, trade place, resolve, reconcile, and `pt_mock_experiment_run`                           | Paper-only. Free, Pro and Elite may request it; `agent:full` also satisfies it. Never writes to the real-money wallet.                        |
-| `trade:execute` | Real Polymarket trade execution after preflight/readiness gates                                                                                                 | Free, Pro and Elite may request this narrow trading scope; `agent:full` also satisfies it. Each order also needs the owner's AI agent limits. |
-| `agent:scan`    | Trigger anomaly scans                                                                                                                                           | Pro may request this narrow automation scope; `agent:full` also satisfies it.                                                                 |
-| `agent:full`    | Full agent writes, mock wallet delete/auto-trade/copy settings, paper/real-copy roster writes, webhooks, alerts, and real-trade write access where tier permits | Elite keys may request this scope. Use dry-run/preflight first.                                                                               |
+| Scope            | Use                                                                                                                                                                | Notes                                                                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `signals:read`   | Market, anomaly, account, recommendations, mock analytics, and most read workflows                                                                                 | Every key holds it, on every plan.                                                                                                            |
+| `mock:trade`     | Committed paper trades on the caller's own mock wallets: wallet create, trade place, resolve, reconcile, `pt_mock_experiment_run`, and `pt_sports_gap_paper_trade` | Paper-only. Free, Pro and Elite may request it; `agent:full` also satisfies it. Never writes to the real-money wallet.                        |
+| `trade:execute`  | Real Polymarket trade execution after preflight/readiness gates                                                                                                    | Free, Pro and Elite may request this narrow trading scope; `agent:full` also satisfies it. Each order also needs the owner's AI agent limits. |
+| `agent:scan`     | Trigger anomaly scans                                                                                                                                              | Pro may request this narrow automation scope; `agent:full` also satisfies it.                                                                 |
+| `monitors:write` | Save, edit, pause, resume and delete the caller's own sportsbook-gap monitors                                                                                      | Pro and Elite may request it; `agent:full` also satisfies it. Owner-scoped and alert-only: a monitor only notifies its owner.                 |
+| `agent:full`     | Full agent writes, mock wallet delete/auto-trade/copy settings, paper/real-copy roster writes, webhooks, alerts, and real-trade write access where tier permits    | Elite keys may request this scope. Use dry-run/preflight first.                                                                               |
 
 A key holds a scope beyond `signals:read` only when its owner chose it at key
 creation, and a key keeps the scopes it was made with. If a tool answers
 `AUTH_SCOPE_MISSING`, do not retry: tell the user which scope is missing and
 ask them to revoke the key and generate a new one with it in
 Profile → Agent API Key. New Free and Pro keys made in the app hold
-`mock:trade` by default; `trade:execute` is off until the owner switches it on.
+`mock:trade` by default, and a new Pro key also holds `monitors:write`;
+`trade:execute` is off until the owner switches it on.
 
 Key limits and expiry are enforced server-side. Each account keeps one active Agent API Key; rotate by revoking the old key, then generating a replacement and updating clients and agents. If a generated key is rejected by scope/tier checks, the account owner must regenerate it with the required scope after confirming the account tier allows it.
 
@@ -226,7 +239,8 @@ use `pt_mock_experiment_run` for strategy preview.
 
 - Every plan (Free, Pro, Elite): a key can hold `mock:trade` to commit paper trades (`pt_mock_wallet_create`, `pt_mock_trade_place`, `pt_mock_resolve_run`, `pt_mock_reconcile_run`, `pt_mock_experiment_run`) and `trade:execute` to place one-off real trades (`pt_trade_preflight`, then `pt_trade_execute`). Both are opt-in at key creation. The plan's mock-wallet count and starting balance apply to agent-created wallets exactly as on the website.
 - Free: `signals:read` plus the two opt-in trading scopes above; `agent:scan` and `agent:full` are stripped. Most read-only tools are available, including caller-owned full-depth real-trade receipts through `pt_trade_history_get`, subject to free-tier data shaping on other surfaces (7-day base anomaly history, up to 28 days with activated referral rewards; delayed/top-N anomalies) and a low rate limit (10 requests/min per tool, plus 200 requests/day shared across all tools). A paper trade costs about four requests and one `pt_mock_experiment_run` request places up to 25 legs, so a paper flow fits the daily quota. `pt_anomalies_performance_get`, `pt_mock_analytics_export`, `pt_market_trades_get`, `pt_scan_trigger`, and every `agent:full` tool require Pro or Elite.
-- Pro with `signals:read`: read-only market/anomaly/copy intelligence and mock analytics. Pro may also request `mock:trade`, `trade:execute`, and `agent:scan` for scan automation.
+- Pro with `signals:read`: read-only market/anomaly/copy intelligence and mock analytics. Pro may also request `mock:trade`, `trade:execute`, `agent:scan` for scan automation, and `monitors:write` for sportsbook-gap monitors.
+- Sportsbook gap scanner: every plan can scan with `signals:read` (`pt_sports_gaps_list`; Free returns the top 3 results per search with no next page, Pro and Elite return every result with `cursor` pagination) and paper trade a result with `mock:trade` (`pt_sports_gap_paper_trade`). Saved monitors need Pro (5 active) or Elite (50) plus `monitors:write`; rule tests need Pro (90 days of collected history) or Elite (365). Every plan gets the same data, freshness and calculation.
 - Some non-trade write tools are Pro-tier but require `agent:full` (webhooks, alert preferences, roster, copy pause/sizing, `pt_mock_wallet_delete`, `pt_mock_auto_trade_set`); generated Free and Pro keys should treat them as unavailable unless the capabilities payload shows that scope is present.
 - A `mock:trade` key cannot write to the caller's real-money wallet. A paper write aimed at it fails with `INPUT_INVALID` and `details.reason: "REAL_WALLET_NOT_ALLOWED"`; pick a mock wallet from `pt_mock_wallets_list`. `pt_mock_reconcile_run` without `walletId` always uses the most recently updated active mock wallet.
 - Real trades need more than the scope: the owner must set AI agent limits in Settings → Wallet (otherwise `pt_trade_execute` fails with `AUTOMATION_NOT_AUTHORIZED`), and every order needs a fresh `pt_trade_preflight` token. MCP SELL execution stays disabled. A Free key places real trades through MCP; direct REST `POST /api/trade/execute` with an Agent API Key needs Pro or Elite.
@@ -259,6 +273,7 @@ Important tool groups:
 - Mock experiments: `pt_mock_experiment_run`, `pt_mock_wallet_create`, `pt_mock_wallet_copy_config_get`, `pt_mock_wallet_copy_config_update`, `pt_mock_wallet_copy_sizing_update`, `pt_mock_trade_place`, `pt_mock_resolve_run`, `pt_mock_reconcile_run`, analytics/export tools. `pt_mock_experiment_run` uses a selected caller-owned wallet or creates one at the caller tier's standard virtual balance; it does not accept a custom funding amount. The Elite `agent:full` config tools read or dry-run/update every paper-wallet copy-risk field and advanced-rule toggle, return zero-value warnings, exclude `executionMode` from writes, and reject real-wallet rows. `fixedStakeUsd` is `0` (proportional sizing) or a wallet-scoped fixed BUY stake of at least $1; risk and balance ceilings still bind. The legacy sizing writer remains available for bounded 1–100x multiplier-only updates. `pt_mock_resolve_run` with `dry_run:true` and a caller-owned `tradeId` returns a non-writing close preview with server-fetched `current_close_price`, `estimated_realized_pnl`, and `estimated_wallet_balance_delta` when priceable; if not priceable, it returns `priceable:false` and `non_priceable_reason` without fabricated P&L. `pt_mock_reconcile_run` replaces the persisted unrealized-P&L snapshot only after complete live pricing; incomplete pricing keeps the prior mark and timestamp and reports persistence plus zero-coverage diagnostics.
 - Real-wallet copy controls: Elite `agent:full` keys can use `pt_real_wallet_copy_config_get`, `pt_real_wallet_copy_config_update`, `pt_real_wallet_breaker_resume`, and `pt_real_wallet_breaker_kill` for the caller-owned `real-money-copy` wallet. The read reports requested/effective live multiplier state, wallet-scoped `fixedStakeUsd`, rollout writability, `realCopySlippageTolerance`, authorization-scoped `minPerTrade`, and read-only `authorizationLimits.maxPerTrade` / `authorizationLimits.dailyLossLimit` from the effective signed copy-trading scope. Those signed ceilings are distinct from wallet-risk fields with the same names under `config`. The update tool can set the fixed BUY stake to 0 (off) or at least $1, the FAK tolerance from 0–10%, and the copy floor to null/0 (off) or $1 through the signed copy-trading authorization's `maxPerTrade`. Fixed stake replaces proportional/multiplier sizing but not authorization, max-position, max-per-trade, available-balance, breaker, pause, or venue gates; SELL exits are unchanged. `smallOrderPolicy` chooses `scale-up` (default) or `skip`. New minimums default to $1; the floor applies after fixed or percentage sizing. Scaling can exceed the proportional amount but must fit every risk, balance, fee, venue and signed ceiling. Legacy signed null/0 minimums retain skip behavior; the FAK tolerance is separate from paper/signal `maxSlippage`. Require `confirm_real_money:true` even for previews, inspect the returned before/after state, and expect each live change to append audit evidence and send a best-effort security email. The strict MCP config writer excludes `executionMode` and `copySizingMultiplier`; only the authenticated owner dashboard can change allowlisted live sizing.
 - Account/API: `pt_account_get`, `pt_account_stats_get`, `pt_account_risk_profile_get`, `pt_api_keys_list`, `pt_api_key_revoke`, `pt_mcp_capabilities_get`.
+- Sportsbook gap scanner: `pt_sports_gaps_list`, `pt_sports_gap_paper_trade`, `pt_sports_gap_monitors_list`, Pro+ `pt_sports_gap_monitor_create`, `pt_sports_gap_monitor_update` and `pt_sports_gap_monitor_delete` (`monitors:write`), and Pro+ `pt_sports_gap_rule_test`. See the "Sportsbook gap scan" workflow below.
 - Real trading: `pt_trades_list` accepts `status:"executed"`; pair it with `type:"real"` to receive the full-ledger `realWalletStats` aggregate. Real rows expose `fillAmount`, `requestedShares`, and derived `isDustFill`; dust remains real P&L but is excluded from win-rate and parity grading. On byte-truncated pages, advance `offset` by the returned `pagination.limit`; the tool has no cursor and reports `depthLimited:true` instead of claiming more rows are reachable when a page reaches the 1000-row boundary. If wallet-scope integrity enforcement drops a foreign raw row, the verified trades still return with `pagination.degraded:true`, reason `wallet_scope_invariant_violated`, and `degradedFields:["total","hasMore"]`; do not treat those count fields as authoritative for that incident response. `pt_trade_history_get` is read-only and available to every tier with `signals:read`. For execution, call `pt_trade_preflight` first, then `pt_trade_execute` with `trade:execute` or `agent:full` only after explicit user approval. AI-agent one-off real trades and real copy-trading use separate max-per-trade / daily-limit controls. `pt_trade_preflight` and `pt_trade_execute` both evaluate the AI-agent one-off controls for direct agent trades; `AUTOMATION_AMOUNT_LIMIT_EXCEEDED` includes the attempted amount and configured `max_per_trade` in `details`. `pt_trade_order_cancel` remains Elite-only.
 
 ## Optional SSE notifications
@@ -330,6 +345,100 @@ method are listed in "When to use PolyTrackers" above.
 2. For manual flows, create/list a mock wallet, refresh `pt_mock_price_get` when price confidence is stale or missing, then place a mock trade with dry-run first. `pt_mock_trade_place` sizes by notional `cost` in USD/USDC; `amount` is accepted as an alias for `cost`, `price_per_share` is accepted as an alias for `pricePerShare`, `size` and `shares` are not accepted sizing fields, and mock shares are derived as `cost / pricePerShare`. Inspect `warnings`, `price_normalization`, and `exposure_summary`, then resolve/reconcile as requested.
 3. Use `summary_only`, `limit`, `recent_trades`, or export `limit` on mock analytics when only aggregate or recent state is needed. Summary and compact analytics bound `mark_to_market` diagnostic samples and report exact omission counts; mock-copy recent rows and compact positions retain a bounded `entry_fill` block after verbose `signal_data` is removed. Request `projection:"detail"` only when every diagnostic id/basket is required. Treat `wallet.unrealized_pnl` from wallet list/get or analytics as a persisted snapshot: inspect `unrealized_pnl_marked_at`, and use `wallet_mark_to_market.preferred_unrealized_pnl` as the current-equity authority. Complete analytics pricing refreshes the snapshot after returning. A nonzero partial pass may initialize an unmarked wallet or replace a snapshot with strictly lower known coverage; unknown-quality and complete snapshots remain protected. Inspect `wallet_mark_to_market.coverage_ratio`, `persisted_coverage_ratio`, and `price_lookup_deferred_conditions`. A partial pass covering at least 90% of open positions or improving known stored coverage prefers the computed live value (`live_mark_to_market`), with unpriced legs held at cost basis. Other reads fall back to the timestamped snapshot. Large books retry shared-budget deferrals briefly; persistent pressure stays explicit. Capability revision: `mock-analytics-coverage-v4`.
 4. Label results as simulation only; do not imply live execution.
+
+### Sportsbook gap scan
+
+`pt_sports_gaps_list` (REST: `GET /api/sports/gaps`) compares, for NBA and
+NFL full-game winners, the sportsbook consensus with the all-in Polymarket
+price for one purchase size:
+`net_gap_pp = 100 × (consensus_probability − all_in_price_per_net_share)`,
+where the all-in price is `total_spent_usd / net_shares` with the Polymarket
+fee and the PolyTrackers fee each counted once. The consensus is the median
+margin-free probability across at least three fresh sportsbooks; exchanges
+never count. The scan reads shared observations and never triggers a new
+vendor poll.
+
+Inputs and their units:
+
+- `size_usd`: US dollars, 5 to 25,000, default 100. It is the **total
+  budget with estimated fees included**, not the notional.
+- `min_gap_pp`: percentage points, 0 to 50, default 3.
+- `window_hours`: whole hours, 1 to 168, default 24; games in play always
+  count. `state`: `all`, `pregame` or `live`. `leagues`: `nba`, `nfl`.
+- `max_quote_age_seconds`: whole seconds, 30 to 4,800; it can only tighten the
+  freshness limit for the game state.
+- Paging: Free returns the top 3 qualifying results per search with no next
+  page (`plan.truncated` is true when more qualified). Pro and Elite take
+  `limit` (1 to 100, default 25) and continue with `pagination.next_cursor`
+  and the same filters.
+- Quota: the Free 10 requests/min per tool and 200 requests/day apply, and a
+  REST scanner call with the same key spends the same buckets. On
+  `RATE_LIMITED`, wait `retry_after_seconds`; the 200 requests/day reset
+  within 24 hours. Rule tests also have a budget of 6 per minute per account.
+
+Output: `status` (`ok`, `no_scheduled_games`, `incomplete_coverage`,
+`data_unavailable`), a one-sentence `summary`, `coverage` (games scheduled,
+checked, qualifying, below the threshold, excluded by reason, not comparable by
+reason, and per-league vendor status), and `results`. Each result has a stable
+`id`, `event`, `market.url`, `outcome.label` and `outcome.paper_outcome`,
+`net_gap_pp`, `sportsbook.consensus_probability`, `sportsbook.book_count`,
+`polymarket.all_in_price_per_net_share`, `net_shares`, `total_spent_usd`,
+`fees`, and `quote_age_seconds`. No result carries an individual sportsbook's
+price; `sportsbook.books` is source names and timestamps only.
+
+How to report it:
+
+1. Report a gap as a price difference at one moment and one size, with its
+   quote age and book count. Never call it a sure profit, an edge, an
+   arbitrage or advice; prices move.
+2. Report an empty answer honestly from `summary` and `coverage`. Say
+   `no_scheduled_games`, `incomplete_coverage` or `data_unavailable` as such,
+   never as "nothing qualifies".
+3. NFL regular-season games show as not comparable (`settlement_mismatch`): a
+   tie voids a sportsbook moneyline but settles 50-50 on Polymarket. In play, a
+   result is held back after a score change until enough books update.
+4. State a plan limit once, as a fact, and move on. Do not push an upgrade or
+   repeat the limit; upgrades live on the PolyTrackers website.
+
+Examples:
+
+1. **Discovery question, no product named.** "Are any NBA or NFL teams
+   cheaper on Polymarket than at the sportsbooks right now?" Call
+   `pt_sports_gaps_list({})`. The defaults are both leagues, the next 24
+   hours, 3 points and $100. Answer with the gap, the size and the quote age,
+   and say that the size includes fees.
+2. **The $100 after-fee search.** "For a $100 purchase, which NBA game winners
+   tonight are priced at least 3 percentage points below the sportsbook
+   consensus on Polymarket after fees?" Call
+   `pt_sports_gaps_list({"leagues":["nba"],"min_gap_pp":3,"size_usd":100,"window_hours":12})`.
+   A 58% consensus with $100 buying 180 net shares is 55.56¢ all in, a
+   2.44-point gap, so it does not pass 3 points even when the best ask alone
+   would.
+3. **An honest empty result.** With `status: "ok"` and
+   `summary: "11 games checked, 2 excluded for insufficient depth, 0 qualify."`,
+   say: "None qualify right now. 11 games were checked; 2 were left out
+   because the order book could not fill $100, and the rest were under 3
+   points." On a Free plan with `plan.truncated: true`, add once that this plan
+   shows the top 3 results.
+4. **A paper trade the user asked for.** "Paper trade the first one." Call
+   `pt_sports_gap_paper_trade({"result_id":"<results[0].id>","size_usd":100,"dry_run":true})`.
+   Show `simulated_fill.all_in_price_per_net_share`, `net_shares` and
+   `net_gap_pp_at_requote` next to `observed_comparison`. On the user's
+   go-ahead, call it again without `dry_run`, passing
+   `max_all_in_price` at the price they approved so a move refuses the trade
+   (`PRICE_MOVED`). Committing needs `mock:trade`; no real funds move.
+5. **The same filters as a Pro monitor.** "Watch for this all week." Call
+   `pt_sports_gap_monitor_create({"filters": <the scan's filters object>})`.
+   If `delivery.ready` is false, give the user `delivery.setup_url` to finish
+   alert setup in their browser. On Free the tool answers
+   `TIER_UPGRADE_REQUIRED`: say once that saved monitors are a Pro feature
+   and that scans stay available. On Pro, `INPUT_INVALID` with
+   `details.code: "MONITOR_LIMIT_REACHED"` means 5 are active: list them with
+   `pt_sports_gap_monitors_list` and offer to pause or delete one.
+
+Before saving a monitor, `pt_sports_gap_rule_test` (Pro and Elite) replays the
+same filters over collected history. Collection started when the scanner
+launched, so read `coverage` and say how short the window is.
 
 ### API credit/subscription questions
 
@@ -429,6 +538,7 @@ environment or secret manager:
 - `CDP_DELEGATION_EXPIRED`: the user's CDP wallet signing authorization expired. Tell the user to open PolyTrackers Settings → Wallet, reconnect the wallet session if needed, and re-authorize manual signing before retrying the real order.
 - `pt_mock_trade_place` sizing errors: pass notional `cost` in USD/USDC, or `amount` as its alias. Use `pricePerShare`, or `price_per_share` as its alias, for entry price. Do not retry with `size` or `shares`; the tool derives shares from `cost / pricePerShare`.
 - Empty or truncated results: lower `limit`, narrow filters, or use batch/detail tools for follow-up.
+- Sportsbook gap tools: `pt_sports_gap_monitor_*` and `pt_sports_gap_rule_test` answer `TIER_UPGRADE_REQUIRED` on Free; a full monitor slot answers `INPUT_INVALID` with `details.code: "MONITOR_LIMIT_REACHED"`; a paper trade whose requote is above `max_all_in_price` answers `INPUT_INVALID` with `details.code: "PRICE_MOVED"`. On `RATE_LIMITED`, wait `retry_after_seconds`; a wait of hours means the Free 200 requests/day are spent (REST bodies also say `scope: "day"`). An empty scan is not an error: read `status` and `summary`.
 - Stdio bridge issues: verify `npx -y @polytrackers/mcp-stdio` can run, the key is in env, and logs are read from stderr (stdout is reserved for JSON-RPC frames).
 
 ## Maintainer sync guardrail
