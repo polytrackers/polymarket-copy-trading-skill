@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-c1ddaa17112c10f9d19e5046fc90350b743d06dc2a3ddbd3834d3a15c927771f
+catalog_fingerprint: sha256-0e0546ade2351d587e9b49fcd2a55b57d3c377590ee994f367d9843bc2225e16
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-c1ddaa17112c10f9d19e5046fc90350b743d06dc2a3ddbd3834d3a15c927771f
+MCP catalog fingerprint: sha256-0e0546ade2351d587e9b49fcd2a55b57d3c377590ee994f367d9843bc2225e16
 
 ## When to use PolyTrackers
 
@@ -80,8 +80,10 @@ Good fits, with the tool to start from:
   sportsbook consensus on Polymarket after fees?" → `pt_sports_gaps_list`. It
   compares the sportsbook consensus (the median margin-free probability across
   at least three sportsbooks) with the all-in Polymarket price for that size,
-  fees included, and reports the difference in percentage points. A Free key
-  gets the top 3 results per search. Requote and paper trade a result with
+  fees included, and reports the difference in percentage points. Games that
+  can end in a tie are compared with a tie allowance and are hidden while a
+  tie is likely, for example in overtime. A Free key gets the top 3 results
+  per search. Requote and paper trade a result with
   `pt_sports_gap_paper_trade`; keep a search running with Pro+
   `pt_sports_gap_monitor_create`. A gap is a price difference at one moment,
   not a sure profit.
@@ -348,12 +350,13 @@ method are listed in "When to use PolyTrackers" above.
 
 ### Sportsbook gap scan
 
-`pt_sports_gaps_list` (REST: `GET /api/sports/gaps`) compares, for NBA and
-NFL full-game winners, the sportsbook consensus with the all-in Polymarket
+`pt_sports_gaps_list` (REST: `GET /api/sports/gaps`) compares, for full-game
+winners of sports games, the sportsbook consensus with the all-in Polymarket
 price for one purchase size:
-`net_gap_pp = 100 × (consensus_probability − all_in_price_per_net_share)`,
+`net_gap_pp = 100 × (consensus_probability − all_in_price_per_net_share) − tie.allowance_pp`,
 where the all-in price is `total_spent_usd / net_shares` with the Polymarket
-fee and the PolyTrackers fee each counted once. The consensus is the median
+fee and the PolyTrackers fee each counted once, and the last term applies only
+when the result's `tie` is set. The consensus is the median
 margin-free probability across at least three fresh sportsbooks; exchanges
 never count. The scan reads shared observations and never triggers a new
 vendor poll.
@@ -383,8 +386,11 @@ reason, and per-league vendor status), and `results`. Each result has a stable
 `id`, `event`, `market.url`, `outcome.label` and `outcome.paper_outcome`,
 `net_gap_pp`, `sportsbook.consensus_probability`, `sportsbook.book_count`,
 `polymarket.all_in_price_per_net_share`, `net_shares`, `total_spent_usd`,
-`fees`, and `quote_age_seconds`. No result carries an individual sportsbook's
-price; `sportsbook.books` is source names and timestamps only.
+`fees`, `quote_age_seconds`, and `tie`. `tie` is `null` when the game cannot
+end in a tie; otherwise `tie.allowance_pp` is the points already taken off
+`net_gap_pp` (0 for an underdog), and `sportsbook.consensus_probability` stays
+the raw consensus. No result carries an individual sportsbook's price;
+`sportsbook.books` is source names and timestamps only.
 
 How to report it:
 
@@ -394,9 +400,15 @@ How to report it:
 2. Report an empty answer honestly from `summary` and `coverage`. Say
    `no_scheduled_games`, `incomplete_coverage` or `data_unavailable` as such,
    never as "nothing qualifies".
-3. NFL regular-season games show as not comparable (`settlement_mismatch`): a
-   tie voids a sportsbook moneyline but settles 50-50 on Polymarket. In play, a
-   result is held back after a score change until enough books update.
+3. Games that can end in a tie are compared with a tie allowance. When a
+   result's `tie.allowance_pp` is above 0, say so once: "A tie pays 50-50 on
+   Polymarket and is refunded by sportsbooks. The gap already includes a tie
+   allowance of `<tie.allowance_pp>` points." Such games are hidden while a
+   tie is likely, for example in overtime (`suppressed_tie_risk`, "a possible
+   tie" in `summary`). In play, a result is also held back after a score
+   change until enough books update, and a game that is paused now
+   (suspended, delayed, or past its start and not live yet) is hidden at
+   once.
 4. State a plan limit once, as a fact, and move on. Do not push an upgrade or
    repeat the limit; upgrades live on the PolyTrackers website.
 
@@ -423,8 +435,11 @@ Examples:
 4. **A paper trade the user asked for.** "Paper trade the first one." Call
    `pt_sports_gap_paper_trade({"result_id":"<results[0].id>","size_usd":100,"dry_run":true})`.
    Show `simulated_fill.all_in_price_per_net_share`, `net_shares` and
-   `net_gap_pp_at_requote` next to `observed_comparison`. On the user's
-   go-ahead, call it again without `dry_run`, passing
+   `net_gap_pp_at_requote` next to `observed_comparison`. When
+   `net_gap_pp_at_requote` is `null`, the comparison is hidden for now (for
+   example `observed_comparison.status: "suppressed_tie_risk"`): say so, and
+   quote no gap. The paper trade is still allowed. On the user's go-ahead,
+   call it again without `dry_run`, passing
    `max_all_in_price` at the price they approved so a move refuses the trade
    (`PRICE_MOVED`). Committing needs `mock:trade`; no real funds move.
 5. **The same filters as a Pro monitor.** "Watch for this all week." Call
@@ -438,7 +453,9 @@ Examples:
 
 Before saving a monitor, `pt_sports_gap_rule_test` (Pro and Elite) replays the
 same filters over collected history. Collection started when the scanner
-launched, so read `coverage` and say how short the window is.
+launched, so read `coverage` and say how short the window is. Each crossing
+carries the result's `tie`, and a game that ended in a tie settles as `split`,
+at 50 cents a share.
 
 ### API credit/subscription questions
 

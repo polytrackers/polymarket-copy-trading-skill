@@ -81,7 +81,9 @@ Mock-wallet caps and initial virtual balances are:
 - **Sportsbook gap (NBA and NFL game winners)** — `pt_sports_gaps_list`
   compares the sportsbook consensus with the all-in Polymarket price for a
   given purchase size, after fees, and reports the difference in percentage
-  points. Agents can requote and paper trade a result
+  points. Games that can end in a tie are compared with a tie allowance and
+  are hidden while a tie is likely, for example in overtime. Agents can
+  requote and paper trade a result
   (`pt_sports_gap_paper_trade`), keep a search running as a Pro monitor
   (`pt_sports_gap_monitor_create`, `monitors:write`), and test the same
   criteria on collected history (`pt_sports_gap_rule_test`, Pro+). A gap is a
