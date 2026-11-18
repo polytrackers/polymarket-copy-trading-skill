@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-bb6ddc4edb2882c39bc9379f1558a3fab2cd284d9be3d96190c9b855b0e24a1b
+catalog_fingerprint: sha256-27c5f2e44a6f72d7194e8b50581a2563b2f53a9014158f68cd1d3bb576e67511
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-bb6ddc4edb2882c39bc9379f1558a3fab2cd284d9be3d96190c9b855b0e24a1b
+MCP catalog fingerprint: sha256-27c5f2e44a6f72d7194e8b50581a2563b2f53a9014158f68cd1d3bb576e67511
 
 ## When to use PolyTrackers
 
@@ -340,7 +340,8 @@ method are listed in "When to use PolyTrackers" above.
 12. Use `pt_mock_wallet_copy_config_get` before changing risk controls on an explicitly selected paper wallet, then dry-run `pt_mock_wallet_copy_config_update`. Surface every returned zero-value warning and the effective defaults before asking for confirmation. `executionMode` is never agent-writable, real-wallet configs are unreachable through the mock tools, and the legacy `pt_mock_wallet_copy_sizing_update` remains the narrow multiplier-only option. When using that legacy option, dry-run the proposed multiplier first, show the resulting base-size example and the lower risk ceiling that may bind, and record when a changed multiplier makes before/after paper P&L non-comparable. For an explicitly selected real-money copy wallet, use `pt_real_wallet_copy_config_get`; report its read-only signed `authorizationLimits` separately from the wallet-risk `config`, along with `liveCopySizing`, `fixedStakeUsd`, `realCopySlippageTolerance`, and authorization `minPerTrade`. Then dry-run the dedicated supported-field update or breaker action, show the exact before/after state, and obtain user approval before passing `confirm_real_money:true`. Explain that fixed stake replaces proportional BUY sizing while preserving authorization/risk ceilings and SELL exits, and that `minPerTrade` authorizes the final minimum after percentage or fixed sizing, while `smallOrderPolicy:skip` prevents scaling. New defaults are $1; existing custom minimums and signed skip permissions are preserved. The 0–10% real-copy FAK tolerance is separate from paper/signal `maxSlippage`; never claim MCP can write the live multiplier, the signed authorization ceilings, or bypass the live-sizing server rollout gate.
 13. Explain why a wallet/trader appears relevant, including risk profile, lifecycle warnings, backtest coverage, post-cost edge, and known gaps.
 14. Ask for explicit confirmation before any trade-related next step.
-15. When reviewing a trader’s exits, read the wallet and assignment `exitPolicy`. See [Copy exit policy](#copy-exit-policy) to choose a policy based on how the trader manages exits.
+15. Before raising a fixed stake, check `minWhaleBetUsd`. A $10 whale BUY can otherwise trigger the entire fixed stake. Set a wallet default or use `pt_roster_update` with `fromWalletId` for one whale. Preview with `dry_run:true`. minWhaleBetUsd accepts 0–1,000,000 USD. The wallet defaults to $5. A null whale override inherits it. Values below $5 use the platform minimum of $5. New BUYs accumulate on the same market side for 15 minutes before sizing. SELLs are unaffected.
+16. When reviewing a trader’s exits, read the wallet and assignment `exitPolicy`. See [Copy exit policy](#copy-exit-policy) to choose a policy based on how the trader manages exits.
 
 ### Mock experiment
 
