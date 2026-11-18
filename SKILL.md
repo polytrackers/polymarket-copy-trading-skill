@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-0e0546ade2351d587e9b49fcd2a55b57d3c377590ee994f367d9843bc2225e16
+catalog_fingerprint: sha256-bb6ddc4edb2882c39bc9379f1558a3fab2cd284d9be3d96190c9b855b0e24a1b
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-0e0546ade2351d587e9b49fcd2a55b57d3c377590ee994f367d9843bc2225e16
+MCP catalog fingerprint: sha256-bb6ddc4edb2882c39bc9379f1558a3fab2cd284d9be3d96190c9b855b0e24a1b
 
 ## When to use PolyTrackers
 
@@ -340,6 +340,7 @@ method are listed in "When to use PolyTrackers" above.
 12. Use `pt_mock_wallet_copy_config_get` before changing risk controls on an explicitly selected paper wallet, then dry-run `pt_mock_wallet_copy_config_update`. Surface every returned zero-value warning and the effective defaults before asking for confirmation. `executionMode` is never agent-writable, real-wallet configs are unreachable through the mock tools, and the legacy `pt_mock_wallet_copy_sizing_update` remains the narrow multiplier-only option. When using that legacy option, dry-run the proposed multiplier first, show the resulting base-size example and the lower risk ceiling that may bind, and record when a changed multiplier makes before/after paper P&L non-comparable. For an explicitly selected real-money copy wallet, use `pt_real_wallet_copy_config_get`; report its read-only signed `authorizationLimits` separately from the wallet-risk `config`, along with `liveCopySizing`, `fixedStakeUsd`, `realCopySlippageTolerance`, and authorization `minPerTrade`. Then dry-run the dedicated supported-field update or breaker action, show the exact before/after state, and obtain user approval before passing `confirm_real_money:true`. Explain that fixed stake replaces proportional BUY sizing while preserving authorization/risk ceilings and SELL exits, and that `minPerTrade` authorizes the final minimum after percentage or fixed sizing, while `smallOrderPolicy:skip` prevents scaling. New defaults are $1; existing custom minimums and signed skip permissions are preserved. The 0–10% real-copy FAK tolerance is separate from paper/signal `maxSlippage`; never claim MCP can write the live multiplier, the signed authorization ceilings, or bypass the live-sizing server rollout gate.
 13. Explain why a wallet/trader appears relevant, including risk profile, lifecycle warnings, backtest coverage, post-cost edge, and known gaps.
 14. Ask for explicit confirmation before any trade-related next step.
+15. When reviewing a trader’s exits, read the wallet and assignment `exitPolicy`. See [Copy exit policy](#copy-exit-policy) to choose a policy based on how the trader manages exits.
 
 ### Mock experiment
 
@@ -647,6 +648,28 @@ Example: `pt_roster_update({address: "<whale-address>", fromWalletId:
 repeat with `dry_run: false` to save. Set this separately from reactivation or a
 wallet move. For a new whale, add watch-only (`copyEnabled: false`), configure the
 limit, then enable copying. Never silently enable copying while setting a limit.
+
+### Copy exit policy
+
+Use `pt_mock_wallet_copy_config_get/update` or
+`pt_real_wallet_copy_config_get/update` for the wallet default.
+`pt_roster_list/get` return each assignment override. Set it with
+`pt_roster_update` and `fromWalletId`. Omit to preserve it and use null on
+the assignment to restore inheritance. Set the override separately from
+reactivation or wallet reassignment. Preview with `dry_run:true`. Real
+wallet default updates also require `confirm_real_money:true`.
+
+- `mirror` is the default. Use it when the trader cuts losers early and you
+  want to follow their normal exits.
+- `hold_to_resolution` skips whale SELLs. Use it to test a resolution-based
+  approach when the trader makes short round trips.
+- `mirror_full_exits_only` ignores trims. Use it when you want to follow
+  complete liquidations with verified zero shares remaining.
+
+The current policy applies to each new SELL, including for existing open
+positions. Use the activity summary to count `exit-policy-hold` decisions
+and check `exit-policy-evidence-unavailable` when a full exit could not be
+verified. Settlement follows the market’s usual process.
 
 ### Copy size scale
 
