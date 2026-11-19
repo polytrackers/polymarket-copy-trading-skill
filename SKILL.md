@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-27c5f2e44a6f72d7194e8b50581a2563b2f53a9014158f68cd1d3bb576e67511
+catalog_fingerprint: sha256-8d75bae644fa12a11c0cef737ea700d494e7479cd81ccd95867067b5db5cc19f
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-27c5f2e44a6f72d7194e8b50581a2563b2f53a9014158f68cd1d3bb576e67511
+MCP catalog fingerprint: sha256-8d75bae644fa12a11c0cef737ea700d494e7479cd81ccd95867067b5db5cc19f
 
 ## When to use PolyTrackers
 
@@ -45,7 +45,8 @@ Good fits, with the tool to start from:
   `pt_whale_performance_get` returns the caller's own result with each copied
   trader (realized P&L, win rate, highest and lowest single-trade P&L);
   `pt_whale_activity_get` returns the stable skip reason on each copy decision,
-  and with `summary:true` the decision counts by reason for one wallet; Pro+
+  with `summary:true` the decision counts by reason, and with
+  `summary:"skip_outcomes"` the modeled return of skipped BUYs held to resolution. Pro+
   `pt_backtest_run` with a whale source and `costModel=copy` charges fees and
   slippage measured from real copy receipts and replays the trailing 30 days as
   a separate holdout; `pt_whale_forward_returns_get` measures forward returns
@@ -627,6 +628,30 @@ Do not pass row `limit`, `cursor`, projections, open or mirror-eligibility filte
 with summary mode. Row calls are unchanged. Timeout, missing migration and
 oversized summaries return an error, never partial counts; narrow the window or
 whale filter when necessary.
+
+### Skip-outcome report
+
+Use `pt_whale_activity_get` with `summary:"skip_outcomes"` to review what a
+copy rule skipped. Pass one owned paper `walletId` and inclusive `since` and
+`until` timestamps spanning at most 31 days. Set `group_by_whale:true` to
+split each reason by whale (default false), or use `whale` to filter one address.
+The Free feed's five-whale scope and 24-hour decision delay apply.
+
+The report models one BUY held to resolution per condition in each group,
+using the earliest retained decision (ties use the activity ID). It cannot
+replay fills. Entry uses the receipt's verified whale price, the stored copy
+stake or current wallet fixed stake, and the backtest copy model's entry
+slippage and fee. The report reads the last saved calibration and shows its
+timestamp and effective rates. Missing calibration uses the backtest defaults.
+
+`summary.by_reason` gives skipped decisions, distinct conditions, resolved
+share (0–1), open and unknown counts, and missing entry prices, exit prices
+and stakes. `resolved` and `marked_open` each give valued conditions, cost,
+value, P&L in USD and ROI percent. Marks are read at report time. Only priced
+conditions with known stakes contribute to returns. An empty valued sample
+has null P&L and ROI. A condition can appear under several reasons or whales,
+so adding groups can count the same market twice. Narrow the window or filter
+by whale if the report exceeds the response budget.
 
 ### Maximum resolution time per copied whale
 
