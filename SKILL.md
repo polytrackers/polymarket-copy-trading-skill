@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-8d75bae644fa12a11c0cef737ea700d494e7479cd81ccd95867067b5db5cc19f
+catalog_fingerprint: sha256-9fcbfb1281acc543849f93baa52c4fa4f4b96280743f48a2faa414d72c52da44
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-8d75bae644fa12a11c0cef737ea700d494e7479cd81ccd95867067b5db5cc19f
+MCP catalog fingerprint: sha256-9fcbfb1281acc543849f93baa52c4fa4f4b96280743f48a2faa414d72c52da44
 
 ## When to use PolyTrackers
 
@@ -76,14 +76,16 @@ Good fits, with the tool to start from:
   "what is this market priced at now?", "which wallets recently traded this
   exact market?" → `pt_markets_search`, Pro+ `pt_market_trades_get`,
   `pt_clob_price_get`.
-- **Sportsbook gap (NBA and NFL game winners)** — "for a $100 purchase, which
+- **Sportsbook gap (NBA, NFL and NHL game winners)** — "for a $100 purchase, which
   NBA game winners tonight are priced at least 3 percentage points below the
   sportsbook consensus on Polymarket after fees?" → `pt_sports_gaps_list`. It
   compares the sportsbook consensus (the median margin-free probability across
   at least three sportsbooks) with the all-in Polymarket price for that size,
   fees included, and reports the difference in percentage points. Games that
   can end in a tie are compared with a tie allowance and are hidden while a
-  tie is likely, for example in overtime. A Free key gets the top 3 results
+  tie is likely, for example in overtime. NBA and NFL games are compared
+  before the game and in play; NHL games before the game only. A Free key
+  gets the top 3 results
   per search. Requote and paper trade a result with
   `pt_sports_gap_paper_trade`; keep a search running with Pro+
   `pt_sports_gap_monitor_create`. A gap is a price difference at one moment,
@@ -412,15 +414,21 @@ How to report it:
    change until enough books update, and a game that is paused now
    (suspended, delayed, or past its start and not live yet) is hidden at
    once.
-4. State a plan limit once, as a fact, and move on. Do not push an upgrade or
+4. NHL games are compared before the game only. An NHL game in play has no
+   comparison until it ends: `coverage.games_excluded.in_play_not_compared`
+   counts it ("a game in play that is compared before its start only" in
+   `summary`), with `state: "live"` too. Say that plainly. It is not missing
+   data and not a stale quote, and no later call changes it while the game
+   is in play.
+5. State a plan limit once, as a fact, and move on. Do not push an upgrade or
    repeat the limit; upgrades live on the PolyTrackers website.
 
 Examples:
 
-1. **Discovery question, no product named.** "Are any NBA or NFL teams
+1. **Discovery question, no product named.** "Are any NBA, NFL or NHL teams
    cheaper on Polymarket than at the sportsbooks right now?" Call
-   `pt_sports_gaps_list({})`. The defaults are both leagues, the next 24
-   hours, 3 points and $100. Answer with the gap, the size and the quote age,
+   `pt_sports_gaps_list({})`. The defaults are every league (NBA, NFL and
+   NHL), the next 24 hours, 3 points and $100. Answer with the gap, the size and the quote age,
    and say that the size includes fees.
 2. **The $100 after-fee search.** "For a $100 purchase, which NBA game winners
    tonight are priced at least 3 percentage points below the sportsbook
@@ -440,8 +448,9 @@ Examples:
    Show `simulated_fill.all_in_price_per_net_share`, `net_shares` and
    `net_gap_pp_at_requote` next to `observed_comparison`. When
    `net_gap_pp_at_requote` is `null`, the comparison is hidden for now (for
-   example `observed_comparison.status: "suppressed_tie_risk"`): say so, and
-   quote no gap. The paper trade is still allowed. On the user's go-ahead,
+   example `observed_comparison.status: "suppressed_tie_risk"`), or the game
+   is in play in a league that is compared before the game only
+   (`"in_play_not_compared"`): say so, and quote no gap. The paper trade is still allowed. On the user's go-ahead,
    call it again without `dry_run`, passing
    `max_all_in_price` at the price they approved so a move refuses the trade
    (`PRICE_MOVED`). Committing needs `mock:trade`; no real funds move.

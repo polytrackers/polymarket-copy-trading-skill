@@ -78,7 +78,7 @@ Mock-wallet caps and initial virtual balances are:
   report excludes pre-#1860 bid-side mock quotes by default.
 - **Anomaly detection** — list/inspect anomaly signals with tier-gated history
   and (Pro+) scan triggering.
-- **Sportsbook gap (NBA and NFL game winners)** — `pt_sports_gaps_list`
+- **Sportsbook gap (NBA, NFL and NHL game winners)** — `pt_sports_gaps_list`
   compares the sportsbook consensus with the all-in Polymarket price for a
   given purchase size, after fees, and reports the difference in percentage
   points. Games that can end in a tie are compared with a tie allowance and
