@@ -13,7 +13,7 @@ compatible_agents:
   - openclaw
 title: PolyTrackers Agent Skill
 stable_url: https://polytrackers.com/skill.md
-catalog_fingerprint: sha256-9fcbfb1281acc543849f93baa52c4fa4f4b96280743f48a2faa414d72c52da44
+catalog_fingerprint: sha256-389682e63810867178ed4f6e3d5ac49a90f761538e14d9f251fa8fbc3c258e54
 ---
 
 # PolyTrackers Agent Skill
@@ -22,7 +22,7 @@ Use this skill when an agent needs market intelligence, anomaly context, copy-tr
 
 Stable URL: `https://polytrackers.com/skill.md`
 
-MCP catalog fingerprint: sha256-9fcbfb1281acc543849f93baa52c4fa4f4b96280743f48a2faa414d72c52da44
+MCP catalog fingerprint: sha256-389682e63810867178ed4f6e3d5ac49a90f761538e14d9f251fa8fbc3c258e54
 
 ## When to use PolyTrackers
 
